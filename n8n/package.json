@@ -1,0 +1,15 @@
+{
+  "name": "echoagent-n8n",
+  "version": "1.0.0",
+  "main": "index.js", 
+  "scripts": {
+    "start": "cross-env N8N_USER_FOLDER=./.n8n_local N8N_PORT=5678 N8N_PROTOCOL=http N8N_HOST=localhost WEBHOOK_URL=http://localhost:5678/ N8N_REST_CORS_ALLOWED_ORIGINS=http://localhost:5173 EXECUTIONS_DATA_SAVE_ON_ERROR=all EXECUTIONS_DATA_SAVE_ON_SUCCESS=none EXECUTIONS_DATA_PRUNE=true EXECUTIONS_DATA_MAX_AGE=24 npx -y n8n"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
