@@ -1,0 +1,400 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ef4920bd-2578-483b-bbf3-b9fe0dd0f2ec",
+      "name": "Daily Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.CL&max_results=8&sortBy=submittedDate&sortOrder=descending",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        -160
+      ],
+      "id": "420439cf-ad1e-4039-91aa-f4a5efbf3db9",
+      "name": "Fetch arXiv Papers"
+    },
+    {
+      "parameters": {
+        "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=AI+OR+LLM+OR+Agent&hitsPerPage=8",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        176
+      ],
+      "id": "6ca9be66-f914-48d9-836c-27b0adc24a5d",
+      "name": "Fetch Hacker News"
+    },
+    {
+      "parameters": {
+        "url": "https://huggingface.co/blog/feed.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e79d8158-c9b3-4eb2-8653-4ae06f3aceb4",
+      "name": "Fetch Hugging Face RSS"
+    },
+    {
+      "parameters": {
+        "jsCode": "const unifiedItems = [];\n\ntry {\n  const hnData = $('Fetch Hacker News').first()?.json;\n  const hnHits = hnData?.hits || [];\n  \n  for (const hit of hnHits.slice(0, 5)) {\n    const itemUrl = hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`;\n    unifiedItems.push({\n      json: {\n        source: 'hackernews',\n        title: hit.title || 'Untitled HN Discussion',\n        item_url: itemUrl,\n        author: hit.author || 'Anonymous',\n        content_snippet: hit.story_text || `HN Points: ${hit.points || 0} | Comments: ${hit.num_comments || 0}`\n      }\n    });\n  }\n} catch (err) {\n  console.log('Error parsing Hacker News:', err.message);\n}\n\n\ntry {\n  const rssItems = $('Fetch Hugging Face RSS').all();\n  \n  for (const item of rssItems.slice(0, 5)) {\n    const data = item.json;\n    unifiedItems.push({\n      json: {\n        source: 'rss',\n        title: data.title || 'Untitled Blog Post',\n        item_url: data.link || '',\n        author: data.creator || 'Hugging Face Research',\n        content_snippet: (data.contentSnippet || data.content || '').substring(0, 400)\n      }\n    });\n  }\n} catch (err) {\n  console.log('Error parsing RSS:', err.message);\n}\n\ntry {\n  const arxivRaw = $('Fetch arXiv Papers').first()?.json?.data || '';\n  const entryMatches = arxivRaw.match(/<entry>[\\s\\S]*?<\\/entry>/g) || [];\n  \n  for (const entry of entryMatches.slice(0, 5)) {\n    const titleMatch = entry.match(/<title>([\\s\\S]*?)<\\/title>/);\n    const idMatch = entry.match(/<id>([\\s\\S]*?)<\\/id>/);\n    const summaryMatch = entry.match(/<summary>([\\s\\S]*?)<\\/summary>/);\n    const authorMatch = entry.match(/<author>\\s*<name>(.*?)<\\/name>/);\n    \n    const title = titleMatch ? titleMatch[1].replace(/\\n/g, ' ').trim() : 'Untitled Paper';\n    const itemUrl = idMatch ? idMatch[1].trim() : '';\n    const summary = summaryMatch ? summaryMatch[1].replace(/\\n/g, ' ').trim().substring(0, 400) : '';\n    const author = authorMatch ? authorMatch[1].trim() : 'arXiv Author';\n    \n    if (itemUrl) {\n      unifiedItems.push({\n        json: {\n          source: 'arxiv',\n          title: title,\n          item_url: itemUrl,\n          author: author,\n          content_snippet: summary\n        }\n      });\n    }\n  }\n} catch (err) {\n  console.log('Error parsing arXiv:', err.message);\n}\n\nreturn unifiedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "ef9f3cd7-dd5b-485f-b588-52b9128f9b33",
+      "name": "Normalize & Merge Feeds"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GROQ_API_KEY || 'YOUR_GROQ_API_KEY' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n(() => {\n  const topics = ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs'];\n  const instructions = 'Prioritize production architectures and benchmarks.';\n  const shortSnippet = ($json.content_snippet || '').substring(0, 150);\n\n  return JSON.stringify({\n    model: \"openai/gpt-oss-20b\",\n    temperature: 0.2,\n    response_format: { type: \"json_object\" },\n    messages: [\n      {\n        role: \"system\",\n        content: `You are a research relevance evaluator for an AI engineer interested in: ${topics.join(', ')}. Instructions: ${instructions}. Return ONLY a JSON object: {\"relevance_score\": <int 1-10>, \"reasoning\": \"<short sentence>\"}.`\n      },\n      {\n        role: \"user\",\n        content: `Title: ${$json.title}\\nSource: ${$json.source}\\nSnippet: ${shortSnippet}`\n      }\n    ]\n  });\n})()\n}}\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 3000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "1709d3e9-fbd4-4c3a-ab42-50f33a24fda7",
+      "name": "AI Relevance Scoring",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const scoredItems = [];\n\nfor (let i = 0; i < $input.all().length; i++) {\n  const groqItem = $input.all()[i].json;\n  const original = $('Normalize & Merge Feeds').all()[i]?.json || {};\n  \n  let score = 5;\n  let reasoning = '';\n  \n  try {\n    const rawContent = groqItem.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(rawContent);\n    score = parseInt(parsed.relevance_score, 10) || 5;\n    reasoning = parsed.reasoning || '';\n  } catch (e) {\n    const match = (groqItem.choices?.[0]?.message?.content || '').match(/relevance_score[\"\\s:]+(\\d+)/i);\n    if (match) score = parseInt(match[1], 10);\n  }\n  \n  scoredItems.push({\n    json: {\n      source: original.source,\n      title: original.title,\n      item_url: original.item_url,\n      author: original.author,\n      content_snippet: original.content_snippet,\n      relevance_score: score,\n      scoring_reason: reasoning\n    }\n  });\n}\n\nreturn scoredItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "aa38842f-9ecc-4a14-9422-9072662c4326",
+      "name": "Extract Scores"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b0c6a82e-20ef-4605-970d-635ff22b3e0e",
+              "leftValue": "={{ $json.relevance_score }}",
+              "rightValue": 6,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "f8b3375d-d0c9-4c55-a76a-dff1bcc38db5",
+      "name": "Filter High Relevance"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GROQ_API_KEY || 'YOUR_GROQ_API_KEY' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\nJSON.stringify({\n  model: \"openai/gpt-oss-20b\",\n  temperature: 0.3,\n  response_format: { type: \"json_object\" },\n  messages: [\n    {\n      role: \"system\",\n      content: \"You are an executive research summarizer for AI practitioners. For the provided research article, generate a JSON object with strictly two keys:\\n1. \\\"ai_summary\\\": A concise 2-3 sentence plain-English explanation of what the paper/post actually presents or claims.\\n2. \\\"why_it_matters\\\": Exactly one punchy line explaining why this matters for production AI systems, agent workflows, or practical LLM engineering.\"\n    },\n    {\n      role: \"user\",\n      content: `Title: ${$json.title}\\nSource: ${$json.source}\\nContent: ${$json.content_snippet}`\n    }\n  ]\n})\n}}\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        -16
+      ],
+      "id": "9bdf5793-bed1-4cf3-9edc-166bed4894d6",
+      "name": "AI Summarizer",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "5479104426",
+        "text": "\ud83e\udd16 <b>EchoAgent is on it!</b> \ud83d\udd0d Scanning arXiv, Hacker News & RSS feeds for your topics... \u23f1\ufe0f Your curated intelligence digest will arrive in ~25 seconds.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        384
+      ],
+      "id": "ca803640-eca5-4365-898a-7526cf5413b4",
+      "name": "Send Instant Ack",
+      "webhookId": "4a7fd025-d2e1-474d-a008-1032186a5213",
+      "credentials": {
+        "telegramApi": {
+          "id": "dUZWxHvUB5WUHNGA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst today = new Date().toISOString().split('T')[0];\n\nlet message = `\u26a1 <b>ECHOAGENT AI RESEARCH DIGEST</b> \u26a1\\n`;\nmessage += `\ud83d\udcc5 <b>Date:</b> <code>${today}</code>\\n`;\nmessage += `\ud83d\udcca <b>Status:</b> ${items.length} Qualified Breakthroughs Discovered\\n\\n`;\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  \n  let summary = 'Summary unavailable.';\n  let why = '';\n  \n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n  \n  const sourceIcons = { arxiv: '\ud83d\udcc4 [arXiv]', hackernews: '\ud83d\udcac [Hacker News]', rss: '\ud83d\udcf0 [Blog]' };\n  const icon = sourceIcons[original.source] || '\ud83d\udccc';\n  const score = original.relevance_score || 8;\n  \n  message += `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n`;\n  message += `${icon} <b>${i + 1}. ${original.title || 'Untitled'}</b>\\n`;\n  message += `\u2b50 <b>Relevance:</b> <code>${score}/10</code>\\n\\n`;\n  message += `\ud83d\udcdd <b>Summary:</b> ${summary}\\n\\n`;\n  if (why) {\n    message += `\ud83d\udca1 <b>Why it matters:</b> <i>${why}</i>\\n\\n`;\n  }\n  if (original.item_url) {\n    message += `\ud83d\udd17 <a href=\"${original.item_url}\">Read Original Article</a>\\n\\n`;\n  }\n}\n\nmessage += `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\ud83d\ude80 <i>Delivered autonomously by EchoAgent</i>`;\n\nreturn [{ json: { digest_html: message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        -16
+      ],
+      "id": "f3f9eb8d-c011-4271-a6e1-f4e06434d954",
+      "name": "Format Digest HTML"
+    },
+    {
+      "parameters": {
+        "chatId": "5479104426",
+        "text": "={{ $json.digest_html }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        -16
+      ],
+      "id": "827d6696-3b94-4519-ba10-bb5f9e684b23",
+      "name": "Send Final Digest",
+      "webhookId": "f28b2679-4f07-4573-a4e2-188fab176048",
+      "credentials": {
+        "telegramApi": {
+          "id": "dUZWxHvUB5WUHNGA",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Hugging Face RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Hacker News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch arXiv Papers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Instant Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Hacker News": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Merge Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Hugging Face RSS": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Merge Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch arXiv Papers": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Merge Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Merge Feeds": {
+      "main": [
+        [
+          {
+            "node": "AI Relevance Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Relevance Scoring": {
+      "main": [
+        [
+          {
+            "node": "Extract Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Scores": {
+      "main": [
+        [
+          {
+            "node": "Filter High Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High Relevance": {
+      "main": [
+        [
+          {
+            "node": "AI Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Format Digest HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Digest HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Final Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
