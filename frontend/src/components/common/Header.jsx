@@ -20,12 +20,10 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
   });
 
   const isActive = preferences?.is_active ?? true;
-  const timeFormatted = preferences?.scheduled_time?.slice(0, 5) || '10:23';
 
   return (
     <header className="border-b border-white/10 bg-[#090a0f]/80 backdrop-blur-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand & Status */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
             <Zap className="w-5 h-5 text-white" />
@@ -41,7 +39,7 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
               {isActive ? (
                 <span className="flex items-center gap-1 text-emerald-400 font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Daily at {timeFormatted}
+                  Daily at 07:00 AM
                 </span>
               ) : (
                 <span className="flex items-center gap-1 text-amber-400 font-medium">
@@ -58,9 +56,7 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
           </div>
         </div>
 
-        {/* Action Controls */}
         <div className="flex items-center gap-3">
-          {/* Settings / Preferences Button */}
           <button
             onClick={onOpenPreferences}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition-all cursor-pointer hover:border-purple-500/30"
@@ -69,7 +65,6 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
             <span className="hidden sm:inline">Preferences</span>
           </button>
 
-          {/* Run Now Trigger Button */}
           <button
             onClick={onTriggerRunNow}
             disabled={running}
@@ -79,7 +74,6 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
             <span>{running ? 'Running Pipeline...' : 'Run Now'}</span>
           </button>
 
-          {/* User Signout */}
           <button
             onClick={logout}
             title={`Signed in as ${user?.email || 'Demo'}`}

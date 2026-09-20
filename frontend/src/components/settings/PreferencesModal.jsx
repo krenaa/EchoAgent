@@ -20,7 +20,6 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
 
   const [topics, setTopics] = useState([]);
   const [newTopicInput, setNewTopicInput] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('10:23');
   const [isActive, setIsActive] = useState(true);
   const [minScore, setMinScore] = useState(7);
   const [customInstructions, setCustomInstructions] = useState('');
@@ -31,7 +30,6 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen && preferences) {
       setTopics(preferences.topics || []);
-      setScheduledTime(preferences.scheduled_time?.slice(0, 5) || '10:23');
       setIsActive(preferences.is_active ?? true);
       setMinScore(preferences.min_score || 7);
       setCustomInstructions(preferences.custom_instructions || '');
@@ -65,7 +63,7 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
     setSaving(true);
     await updatePreferences({
       topics,
-      scheduled_time: scheduledTime.length === 5 ? `${scheduledTime}:00` : scheduledTime,
+      scheduled_time: '07:00:00',
       is_active: isActive,
       min_score: parseInt(minScore, 10),
       custom_instructions: customInstructions,
@@ -90,8 +88,8 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
               <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white leading-tight">Agent Preferences & Schedule</h2>
-              <p className="text-xs text-slate-400">Configure topics, delivery time, and telegram destination</p>
+              <h2 className="text-lg font-bold text-white leading-tight">Agent Preferences & Profile</h2>
+              <p className="text-xs text-slate-400">Configure research topics, relevance threshold, and telegram destination</p>
             </div>
           </div>
           <button
@@ -108,11 +106,11 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
               <div className={`w-3.5 h-3.5 rounded-full ${isActive ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50 animate-pulse' : 'bg-amber-500'}`} />
               <div>
                 <h3 className="text-sm font-semibold text-white">
-                  Daily Workflow Status: {isActive ? 'Active (Running Daily)' : 'Paused'}
+                  Daily Workflow Status: {isActive ? 'Active (Running Daily at 07:00 AM)' : 'Paused'}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {isActive 
-                    ? 'EchoAgent will automatically scan and send your digest every day.' 
+                    ? 'EchoAgent will automatically scan and send your digest every morning at 7:00 AM.' 
                     : 'Workflow is paused. No messages will be sent until resumed.'}
                 </p>
               </div>
@@ -196,20 +194,17 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <div className="p-3.5 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
+              <label className="block text-xs font-semibold text-cyan-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Daily Delivery Time</span>
+                <span>Automated Daily Schedule</span>
               </label>
-              <input
-                type="time"
-                value={scheduledTime}
-                onChange={(e) => setScheduledTime(e.target.value)}
-                className="w-full bg-[#161a2a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
-              />
-              <span className="text-[11px] text-slate-500 mt-1 block">
-                Workflow will run every day at this hour.
-              </span>
+              <div className="text-sm font-bold text-white font-outfit mt-0.5">
+                07:00 AM (Fixed Daily Cycle)
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Digests dispatch automatically every morning at 7:00 AM. Click "Run Now" anytime on the dashboard for immediate briefings.
+              </p>
             </div>
 
             <div>

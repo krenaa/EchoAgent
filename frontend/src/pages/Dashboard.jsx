@@ -105,7 +105,7 @@ export const Dashboard = () => {
             className="self-start md:self-auto flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold transition-all cursor-pointer"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Customize Topics & Schedule</span>
+            <span>Customize Topics & Profile</span>
           </button>
         </div>
 
