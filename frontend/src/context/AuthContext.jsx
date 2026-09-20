@@ -93,15 +93,46 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const register = async (email, password) => {
+  const register = async (email, password, telegramChatId = '') => {
     if (!isSupabaseConfigured || !supabase) {
       const demoUser = { id: 'demo-' + Date.now(), email, is_demo: true };
       setUser(demoUser);
       localStorage.setItem('echoagent_user', JSON.stringify(demoUser));
+      const updated = {
+        ...preferences,
+        email,
+        telegram_chat_id: telegramChatId
+      };
+      setPreferences(updated);
+      localStorage.setItem('echoagent_user_preferences', JSON.stringify(updated));
       return { user: demoUser };
     }
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          telegram_chat_id: telegramChatId
+        }
+      }
+    });
     if (error) throw error;
+    if (data?.user) {
+      try {
+        await supabase
+          .from('user_preferences')
+          .upsert({
+            user_id: data.user.id,
+            email,
+            telegram_chat_id: telegramChatId,
+            topics: ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs'],
+            scheduled_time: '07:00:00',
+            is_active: true
+          });
+      } catch (err) {
+        console.error(err);
+      }
+    }
     return data;
   };
 

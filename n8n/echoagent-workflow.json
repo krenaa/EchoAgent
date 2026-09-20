@@ -211,7 +211,7 @@
     {
       "parameters": {
         "chatId": "5479104426",
-        "text": "\ud83e\udd16 <b>EchoAgent is on it!</b> \ud83d\udd0d Scanning arXiv, Hacker News & RSS feeds for your topics... \u23f1\ufe0f Your curated intelligence digest will arrive in ~25 seconds.",
+        "text": "<b>[EchoAgent] Pipeline Initialized</b>\n<blockquote>Scanning arXiv, Hacker News & RSS feeds for your active topics. Curated intelligence report will arrive in ~25 seconds.</blockquote>",
         "additionalFields": {
           "parse_mode": "HTML"
         }
@@ -234,7 +234,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst today = new Date().toISOString().split('T')[0];\n\nlet message = `\u26a1 <b>ECHOAGENT AI RESEARCH DIGEST</b> \u26a1\\n`;\nmessage += `\ud83d\udcc5 <b>Date:</b> <code>${today}</code>\\n`;\nmessage += `\ud83d\udcca <b>Status:</b> ${items.length} Qualified Breakthroughs Discovered\\n\\n`;\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  \n  let summary = 'Summary unavailable.';\n  let why = '';\n  \n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n  \n  const sourceIcons = { arxiv: '\ud83d\udcc4 [arXiv]', hackernews: '\ud83d\udcac [Hacker News]', rss: '\ud83d\udcf0 [Blog]' };\n  const icon = sourceIcons[original.source] || '\ud83d\udccc';\n  const score = original.relevance_score || 8;\n  \n  message += `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n`;\n  message += `${icon} <b>${i + 1}. ${original.title || 'Untitled'}</b>\\n`;\n  message += `\u2b50 <b>Relevance:</b> <code>${score}/10</code>\\n\\n`;\n  message += `\ud83d\udcdd <b>Summary:</b> ${summary}\\n\\n`;\n  if (why) {\n    message += `\ud83d\udca1 <b>Why it matters:</b> <i>${why}</i>\\n\\n`;\n  }\n  if (original.item_url) {\n    message += `\ud83d\udd17 <a href=\"${original.item_url}\">Read Original Article</a>\\n\\n`;\n  }\n}\n\nmessage += `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\ud83d\ude80 <i>Delivered autonomously by EchoAgent</i>`;\n\nreturn [{ json: { digest_html: message } }];\n"
+        "jsCode": "const items = $input.all();\nconst today = new Date().toISOString().split('T')[0];\n\nif (items.length === 0) {\n  return [{\n    json: {\n      digest_html: `<b>[ECHOAGENT RESEARCH INTELLIGENCE]</b>\\n<code>${today}</code> | <b>STATUS: ALL CAUGHT UP</b>\\n\\n<blockquote>All recent arXiv papers, Hacker News discussions, and technical publications have already been delivered in your recent digest. No new high-signal breakthroughs were published in the interim.</blockquote>\\n\\n<i>Next automated cycle will execute on schedule.</i>`\n    }\n  }];\n}\n\nlet message = `<b>[ECHOAGENT RESEARCH INTELLIGENCE]</b>\\n`;\nmessage += `<b>Date:</b> <code>${today}</code> | <b>Status:</b> ${items.length} Qualified Breakthroughs\\n\\n`;\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  \n  let summary = 'Summary unavailable.';\n  let why = '';\n  \n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n  \n  const sourceTag = original.source ? `[${original.source.toUpperCase()}]` : '[RESEARCH]';\n  const score = original.relevance_score || 8;\n  \n  message += `━━━━━━━━━━━━━━━━━━━━━\\n`;\n  message += `<b>${i + 1}. ${sourceTag} ${original.title || 'Untitled'}</b>\\n`;\n  message += `<b>Relevance:</b> <code>${score}/10</code>\\n\\n`;\n  message += `<blockquote>${summary}</blockquote>\\n\\n`;\n  if (why) {\n    message += `<b>Why it matters:</b> <i>${why}</i>\\n\\n`;\n  }\n  if (original.item_url) {\n    message += `<a href=\"${original.item_url}\">[Read Source Publication]</a>\\n\\n`;\n  }\n}\n\nmessage += `━━━━━━━━━━━━━━━━━━━━━\\n<i>Delivered autonomously by EchoAgent Engine</i>`;\n\nreturn [{ json: { digest_html: message } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -275,22 +275,29 @@
       "main": [
         [
           {
-            "node": "Fetch Hugging Face RSS",
+            "node": "Send Instant Ack",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Fetch Hacker News",
-            "type": "main",
-            "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Send Instant Ack": {
+      "main": [
+        [
           {
             "node": "Fetch arXiv Papers",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Fetch arXiv Papers": {
+      "main": [
+        [
           {
-            "node": "Send Instant Ack",
+            "node": "Fetch Hacker News",
             "type": "main",
             "index": 0
           }
@@ -301,7 +308,7 @@
       "main": [
         [
           {
-            "node": "Normalize & Merge Feeds",
+            "node": "Fetch Hugging Face RSS",
             "type": "main",
             "index": 0
           }
@@ -309,17 +316,6 @@
       ]
     },
     "Fetch Hugging Face RSS": {
-      "main": [
-        [
-          {
-            "node": "Normalize & Merge Feeds",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch arXiv Papers": {
       "main": [
         [
           {
