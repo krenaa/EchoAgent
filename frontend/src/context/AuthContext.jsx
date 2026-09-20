@@ -8,21 +8,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('echoagent_user_preferences');
-    return saved ? JSON.parse(saved) : initialMockPreferences;
+    return saved ? JSON.parse(saved) : { ...initialMockPreferences, telegram_chat_id: '' };
   });
   const [loading, setLoading] = useState(true);
 
-  // Sync preferences to localStorage
   useEffect(() => {
     if (preferences) {
       localStorage.setItem('echoagent_user_preferences', JSON.stringify(preferences));
     }
   }, [preferences]);
 
-  // Check initial session & Supabase listener
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
-      // Auto-load demo user if no Supabase credentials configured
       const savedUser = localStorage.getItem('echoagent_user');
       if (savedUser) {
         setUser(JSON.parse(savedUser));
@@ -99,9 +96,9 @@ export const AuthProvider = ({ children }) => {
       setUser(demoUser);
       localStorage.setItem('echoagent_user', JSON.stringify(demoUser));
       const updated = {
-        ...preferences,
+        ...initialMockPreferences,
         email,
-        telegram_chat_id: telegramChatId
+        telegram_chat_id: telegramChatId.trim()
       };
       setPreferences(updated);
       localStorage.setItem('echoagent_user_preferences', JSON.stringify(updated));
@@ -112,7 +109,7 @@ export const AuthProvider = ({ children }) => {
       password,
       options: {
         data: {
-          telegram_chat_id: telegramChatId
+          telegram_chat_id: telegramChatId.trim()
         }
       }
     });
@@ -124,7 +121,7 @@ export const AuthProvider = ({ children }) => {
           .upsert({
             user_id: data.user.id,
             email,
-            telegram_chat_id: telegramChatId,
+            telegram_chat_id: telegramChatId.trim(),
             topics: ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs'],
             scheduled_time: '07:00:00',
             is_active: true
@@ -141,7 +138,12 @@ export const AuthProvider = ({ children }) => {
       await supabase.auth.signOut();
     }
     setUser(null);
+    setPreferences({
+      ...initialMockPreferences,
+      telegram_chat_id: ''
+    });
     localStorage.removeItem('echoagent_user');
+    localStorage.removeItem('echoagent_user_preferences');
   };
 
   const updatePreferences = async (updatedFields) => {

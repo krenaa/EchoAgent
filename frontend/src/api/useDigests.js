@@ -84,6 +84,10 @@ export const useTriggerDigest = () => {
 
   return useMutation({
     mutationFn: async ({ topics, minScore, telegramChatId }) => {
+      if (!telegramChatId || !telegramChatId.trim()) {
+        return { success: true, skipped_telegram: true };
+      }
+
       try {
         const response = await fetch(N8N_WEBHOOK_URL, {
           method: 'POST',
@@ -92,8 +96,7 @@ export const useTriggerDigest = () => {
             trigger: 'manual_dashboard_run',
             topics: topics || [],
             min_score: minScore || 7,
-            telegram_chat_id: telegramChatId || '',
-            skip_telegram: !telegramChatId,
+            telegram_chat_id: telegramChatId.trim(),
             timestamp: new Date().toISOString()
           })
         });
@@ -108,8 +111,7 @@ export const useTriggerDigest = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               trigger: 'manual_run_direct',
-              telegram_chat_id: telegramChatId || '',
-              skip_telegram: !telegramChatId
+              telegram_chat_id: telegramChatId.trim()
             })
           });
         } catch (fallbackErr) {}

@@ -1,7 +1,3 @@
-// ==============================================================================
-// EchoAgent: Fallback Mock Data for Instant Offline Demo & Development
-// ==============================================================================
-
 export const initialMockPreferences = {
   id: 'pref_demo_01',
   user_id: 'user_demo_01',
@@ -10,8 +6,8 @@ export const initialMockPreferences = {
   custom_instructions: 'Prioritize production architectures, low-latency evaluation, and real-world benchmarks. Filter out generic beginner tutorials.',
   min_score: 7,
   is_active: true,
-  scheduled_time: '10:23:00',
-  telegram_chat_id: '5479104426',
+  scheduled_time: '07:00:00',
+  telegram_chat_id: '',
   last_executed_at: new Date().toISOString()
 };
 

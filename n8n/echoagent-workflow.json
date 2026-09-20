@@ -225,6 +225,8 @@
       "id": "ca803640-eca5-4365-898a-7526cf5413b4",
       "name": "Send Instant Ack",
       "webhookId": "4a7fd025-d2e1-474d-a008-1032186a5213",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
       "credentials": {
         "telegramApi": {
           "id": "dUZWxHvUB5WUHNGA",
@@ -262,6 +264,8 @@
       "id": "827d6696-3b94-4519-ba10-bb5f9e684b23",
       "name": "Send Final Digest",
       "webhookId": "f28b2679-4f07-4573-a4e2-188fab176048",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
       "credentials": {
         "telegramApi": {
           "id": "dUZWxHvUB5WUHNGA",
