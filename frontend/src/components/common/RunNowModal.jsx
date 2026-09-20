@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Loader2, Sparkles, Send, X, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, Sparkles, Send, X, Layers } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const RunNowModal = ({ isOpen, onClose, onComplete }) => {
+  const { preferences } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
+
+  const hasTelegram = Boolean(preferences?.telegram_chat_id && preferences.telegram_chat_id.trim());
 
   const steps = [
     { title: 'Connecting to Sources', desc: 'Fetching recent entries from arXiv, Hacker News & RSS' },
     { title: 'Deduplicating & Normalizing', desc: 'Filtering out previously scanned items' },
     { title: 'AI Relevance Scoring (Groq)', desc: 'Evaluating articles against your active topics' },
     { title: 'Synthesizing Executive Summaries', desc: 'Generating 2-sentence takeaways & Why It Matters' },
-    { title: 'Dispatching to Telegram', desc: 'Delivering compiled intelligence report' }
+    hasTelegram 
+      ? { title: 'Dispatching to Telegram', desc: `Delivering to Chat ID ${preferences.telegram_chat_id}` }
+      : { title: 'Updating Research Intelligence', desc: 'Compiling findings directly to dashboard feed' }
   ];
 
   useEffect(() => {
@@ -41,7 +47,6 @@ export const RunNowModal = ({ isOpen, onClose, onComplete }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="w-full max-w-lg bg-[#111422] border border-purple-500/30 rounded-2xl shadow-2xl p-6 relative overflow-hidden">
-        {/* Subtle background glow */}
         <div className="absolute -top-16 -right-16 w-48 h-48 bg-purple-600/20 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex items-center justify-between mb-6">
@@ -64,7 +69,6 @@ export const RunNowModal = ({ isOpen, onClose, onComplete }) => {
           )}
         </div>
 
-        {/* Stepper Progress */}
         <div className="space-y-4 my-2">
           {steps.map((step, idx) => {
             const isDone = currentStep > idx;
@@ -106,11 +110,18 @@ export const RunNowModal = ({ isOpen, onClose, onComplete }) => {
           })}
         </div>
 
-        {/* Success Footer */}
         {currentStep >= 5 ? (
           <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
             <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
-              <Send className="w-4 h-4" /> Delivered to Telegram!
+              {hasTelegram ? (
+                <>
+                  <Send className="w-4 h-4" /> Delivered to Telegram!
+                </>
+              ) : (
+                <>
+                  <Layers className="w-4 h-4" /> Feed Intelligence Refreshed!
+                </>
+              )}
             </span>
             <button
               onClick={onClose}

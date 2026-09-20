@@ -24,7 +24,8 @@ export const Dashboard = () => {
     setIsRunNowOpen(true);
     triggerMutation.mutate({
       topics: preferences?.topics || [],
-      minScore: preferences?.min_score || 7
+      minScore: preferences?.min_score || 7,
+      telegramChatId: preferences?.telegram_chat_id || ''
     });
   };
 

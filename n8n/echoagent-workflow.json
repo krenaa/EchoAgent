@@ -210,7 +210,7 @@
     },
     {
       "parameters": {
-        "chatId": "5479104426",
+        "chatId": "={{ $('Webhook Trigger').first()?.json?.body?.telegram_chat_id || '' }}",
         "text": "<b>[EchoAgent] Pipeline Initialized</b>\n<blockquote>Scanning arXiv, Hacker News & RSS feeds for your active topics. Curated intelligence report will arrive in ~25 seconds.</blockquote>",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -247,7 +247,7 @@
     },
     {
       "parameters": {
-        "chatId": "5479104426",
+        "chatId": "={{ $('Webhook Trigger').first()?.json?.body?.telegram_chat_id || '' }}",
         "text": "={{ $json.digest_html }}",
         "additionalFields": {
           "parse_mode": "HTML"
