@@ -41,10 +41,12 @@ const fetchLiveFeedItems = async (topics = ['AI', 'LLM', 'Agent']) => {
   }
 };
 
-export const useDigests = () => {
+export const useDigests = (topics = []) => {
   return useQuery({
-    queryKey: ['digests'],
+    queryKey: ['digests', topics.join(',')],
     queryFn: async () => {
+      let fetched = [];
+
       if (isSupabaseConfigured && supabase) {
         try {
           const { data, error } = await supabase
@@ -53,26 +55,37 @@ export const useDigests = () => {
             .order('created_at', { ascending: false });
 
           if (!error && data && data.length > 0) {
-            return data;
+            fetched = data;
           }
         } catch (err) {
           console.warn('Supabase query failed:', err);
         }
       }
 
-      const liveItems = await fetchLiveFeedItems();
-      if (liveItems && liveItems.length > 0) {
-        return liveItems;
+      if (fetched.length === 0) {
+        const localItems = localStorage.getItem('echoagent_digest_items');
+        if (localItems) {
+          try {
+            const parsed = JSON.parse(localItems);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              fetched = parsed;
+            }
+          } catch (e) {}
+        }
       }
 
-      const localItems = localStorage.getItem('echoagent_digest_items');
-      if (localItems) {
-        try {
-          return JSON.parse(localItems);
-        } catch (e) {}
+      if (fetched.length === 0) {
+        const liveItems = await fetchLiveFeedItems(topics);
+        if (liveItems && liveItems.length > 0) {
+          fetched = liveItems;
+        }
       }
 
-      return mockDigestItems;
+      const mergedMap = new Map();
+      mockDigestItems.forEach(item => mergedMap.set(item.item_url || item.id, item));
+      fetched.forEach(item => mergedMap.set(item.item_url || item.id, item));
+
+      return Array.from(mergedMap.values());
     },
     staleTime: 1000 * 60 * 2,
     refetchInterval: 1000 * 60 * 3,
@@ -83,11 +96,7 @@ export const useTriggerDigest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ topics, minScore, telegramChatId }) => {
-      if (!telegramChatId || !telegramChatId.trim()) {
-        return { success: true, skipped_telegram: true };
-      }
-
+    mutationFn: async ({ topics, minScore }) => {
       try {
         const response = await fetch(N8N_WEBHOOK_URL, {
           method: 'POST',
@@ -96,7 +105,6 @@ export const useTriggerDigest = () => {
             trigger: 'manual_dashboard_run',
             topics: topics || [],
             min_score: minScore || 7,
-            telegram_chat_id: telegramChatId.trim(),
             timestamp: new Date().toISOString()
           })
         });
@@ -104,25 +112,19 @@ export const useTriggerDigest = () => {
         const result = await response.json().catch(() => ({ success: true }));
         return result;
       } catch (err) {
-        try {
-          await fetch('http://localhost:5678/webhook/trigger-digest', {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              trigger: 'manual_run_direct',
-              telegram_chat_id: telegramChatId.trim()
-            })
-          });
-        } catch (fallbackErr) {}
         return { success: true };
       }
     },
     onSuccess: async (data, variables) => {
+      if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
+        localStorage.setItem('echoagent_digest_items', JSON.stringify(data.items));
+        queryClient.setQueryData(['digests', (variables?.topics || []).join(',')], data.items);
+        return;
+      }
       const freshLiveItems = await fetchLiveFeedItems(variables?.topics || []);
       if (freshLiveItems && freshLiveItems.length > 0) {
         localStorage.setItem('echoagent_digest_items', JSON.stringify(freshLiveItems));
-        queryClient.setQueryData(['digests'], freshLiveItems);
+        queryClient.setQueryData(['digests', (variables?.topics || []).join(',')], freshLiveItems);
       } else {
         queryClient.invalidateQueries({ queryKey: ['digests'] });
       }

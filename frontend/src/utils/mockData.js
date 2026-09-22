@@ -7,7 +7,6 @@ export const initialMockPreferences = {
   min_score: 7,
   is_active: true,
   scheduled_time: '07:00:00',
-  telegram_chat_id: '',
   last_executed_at: new Date().toISOString()
 };
 

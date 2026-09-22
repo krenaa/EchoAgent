@@ -1,46 +1,43 @@
 import React from 'react';
-import { Layers, CheckCircle2, Award, Send, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { Layers, CheckCircle2, Award, Sparkles } from 'lucide-react';
 
 export const AnalyticsBar = ({ items = [] }) => {
-  const { preferences } = useAuth();
   const totalScanned = items.length;
   const qualifiedMatches = items.filter(i => (i.relevance_score || 0) >= 7).length;
   const topTier = items.filter(i => (i.relevance_score || 0) >= 9).length;
-  const hasTelegram = Boolean(preferences?.telegram_chat_id && preferences.telegram_chat_id.trim());
 
   const stats = [
     {
-      label: 'Total Items Scanned',
+      label: 'Scanned Submissions',
       value: totalScanned,
-      subtext: 'Across arXiv, HN & RSS Feeds',
+      subtext: 'arXiv, Hacker News & RSS Radar',
       icon: Layers,
-      color: 'text-cyan-400',
-      bg: 'bg-cyan-500/10 border-cyan-500/20'
+      color: 'text-neutral-900',
+      bg: 'bg-neutral-100 border-neutral-200'
     },
     {
-      label: 'Qualified Matches',
+      label: 'Curated Matches',
       value: qualifiedMatches,
-      subtext: 'Relevance score ≥ 7/10',
+      subtext: 'Relevance rating ≥ 7/10',
       icon: CheckCircle2,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/10 border-purple-500/20'
+      color: 'text-orange-600',
+      bg: 'bg-orange-50 border-orange-200'
     },
     {
-      label: 'Top-Tier Breakthroughs',
+      label: 'Elite Breakthroughs',
       value: topTier,
-      subtext: 'Elite relevance ≥ 9/10',
+      subtext: 'Top nominees score ≥ 9/10',
       icon: Award,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10 border-amber-500/20'
+      color: 'text-rose-600',
+      bg: 'bg-rose-50 border-rose-200'
     },
     {
-      label: 'Telegram Delivery',
-      value: hasTelegram ? 'Connected' : 'Not Linked',
-      subtext: hasTelegram ? `Chat ID: ${preferences.telegram_chat_id}` : 'Action required for delivery',
-      icon: hasTelegram ? Send : AlertTriangle,
-      color: hasTelegram ? 'text-emerald-400' : 'text-amber-400',
-      bg: hasTelegram ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20'
+      label: 'Autonomous Agent',
+      value: 'Live',
+      subtext: 'n8n + Groq + Supabase Pipeline',
+      icon: Sparkles,
+      color: 'text-emerald-700',
+      bg: 'bg-emerald-50 border-emerald-200'
     }
   ];
 
@@ -51,19 +48,19 @@ export const AnalyticsBar = ({ items = [] }) => {
         return (
           <div 
             key={stat.label} 
-            className="glass-card p-4 rounded-2xl border border-white/5 flex flex-col justify-between"
+            className="glass-card p-4 rounded-2xl flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-slate-400">{stat.label}</span>
-              <div className={`p-2 rounded-xl border ${stat.bg} ${stat.color}`}>
-                <Icon className="w-4 h-4" />
+              <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-500">{stat.label}</span>
+              <div className={`p-1.5 rounded-lg border ${stat.bg} ${stat.color}`}>
+                <Icon className="w-3.5 h-3.5" />
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-white font-outfit tracking-tight">
+              <div className="text-2xl font-bold text-neutral-900 font-display tracking-tight">
                 {stat.value}
               </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">
+              <div className="text-[11px] text-neutral-500 mt-0.5">
                 {stat.subtext}
               </div>
             </div>

@@ -3,37 +3,25 @@ import { useAuth } from '../../context/AuthContext';
 import { 
   X, 
   Plus, 
-  Trash2, 
-  Clock, 
-  Power, 
-  Send, 
   Sliders, 
   CheckCircle, 
-  AlertCircle,
-  HelpCircle,
-  ExternalLink,
-  Sparkles
+  Sparkles,
+  Database
 } from 'lucide-react';
 
 export const PreferencesModal = ({ isOpen, onClose }) => {
-  const { preferences, updatePreferences } = useAuth();
+  const { user, preferences, updatePreferences } = useAuth();
 
   const [topics, setTopics] = useState([]);
   const [newTopicInput, setNewTopicInput] = useState('');
-  const [isActive, setIsActive] = useState(true);
   const [minScore, setMinScore] = useState(7);
-  const [customInstructions, setCustomInstructions] = useState('');
-  const [telegramChatId, setTelegramChatId] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen && preferences) {
       setTopics(preferences.topics || []);
-      setIsActive(preferences.is_active ?? true);
       setMinScore(preferences.min_score || 7);
-      setCustomInstructions(preferences.custom_instructions || '');
-      setTelegramChatId(preferences.telegram_chat_id || '');
       setNewTopicInput('');
       setSavedSuccess(false);
     }
@@ -63,11 +51,7 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
     setSaving(true);
     await updatePreferences({
       topics,
-      scheduled_time: '07:00:00',
-      is_active: isActive,
-      min_score: parseInt(minScore, 10),
-      custom_instructions: customInstructions,
-      telegram_chat_id: telegramChatId
+      min_score: parseInt(minScore, 10)
     });
     setSaving(false);
     setSavedSuccess(true);
@@ -80,96 +64,91 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
   const suggestedTopics = ['Local LLMs', 'Fine-Tuning', 'Multi-Agent', 'Vision AI', 'Prompt Engineering', 'LangChain'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-[#111422] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-neutral-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="w-full max-w-xl bg-white border border-[#e8e8e3] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-4 sm:px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/70">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-              <Sliders className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm shadow-indigo-500/25 flex-shrink-0">
+              <Sliders className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white leading-tight">Agent Preferences & Profile</h2>
-              <p className="text-xs text-slate-400">Configure research topics, relevance threshold, and telegram destination</p>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 leading-tight font-display">Research Criteria & Focus</h2>
+              <p className="text-[11px] sm:text-xs text-neutral-500">Configure topics and quality cutoff for radar curation</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+            className="text-neutral-400 hover:text-neutral-700 p-1.5 rounded-full hover:bg-neutral-100 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
-              <div className={`w-3.5 h-3.5 rounded-full ${isActive ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50 animate-pulse' : 'bg-amber-500'}`} />
-              <div>
-                <h3 className="text-sm font-semibold text-white">
-                  Daily Workflow Status: {isActive ? 'Active (Running Daily at 07:00 AM)' : 'Paused'}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {isActive 
-                    ? 'EchoAgent will automatically scan and send your digest every morning at 7:00 AM.' 
-                    : 'Workflow is paused. No messages will be sent until resumed.'}
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-xs text-xs sm:text-sm font-mono flex-shrink-0">
+                {(user?.email?.[0] || 'U').toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xs sm:text-sm font-bold text-neutral-900 truncate">{user?.email || 'Curator Researcher'}</h3>
+                  <span className="text-[9px] sm:text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    Active
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-neutral-500 mt-0.5 flex items-center gap-1.5 truncate">
+                  <Database className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                  Target: <span className="text-neutral-800 font-medium">Supabase Cloud + React Feed</span>
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsActive(!isActive)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                isActive 
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30' 
-                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
-              }`}
-            >
-              <Power className="w-3.5 h-3.5" />
-              <span>{isActive ? 'Pause Digests' : 'Resume Digests'}</span>
-            </button>
+            <div className="text-xs text-indigo-800 bg-indigo-50/60 px-3 py-1 rounded-full border border-indigo-200/70 shadow-2xs font-mono text-[11px] self-start sm:self-auto">
+              <span>Tracking: <strong className="text-indigo-950 font-bold">{topics.length} topics</strong></span>
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-              Interested Research Topics
+            <label className="block text-[11px] font-semibold text-neutral-800 uppercase tracking-wider mb-1.5 font-mono">
+              Active Topic Filters
             </label>
-            <p className="text-xs text-slate-400 mb-3">
-              The AI scores incoming arXiv papers and posts strictly against these topics.
+            <p className="text-[11px] sm:text-xs text-neutral-500 mb-3">
+              Autonomous AI agent matches arXiv submissions, Hacker News stories, and AI blogs against these topics.
             </p>
 
             <div className="flex flex-wrap gap-2 mb-3">
               {topics.map((topic) => (
                 <span 
                   key={topic} 
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/15 text-purple-200 border border-purple-500/30"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-50/80 text-indigo-800 border border-indigo-200/80 shadow-2xs"
                 >
                   {topic}
                   <button 
                     onClick={() => handleRemoveTopic(topic)}
-                    className="hover:text-red-400 transition-colors cursor-pointer"
+                    className="hover:text-red-600 transition-colors cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))}
               {topics.length === 0 && (
-                <span className="text-xs text-amber-400 italic">No topics added. Add at least one topic.</span>
+                <span className="text-xs text-amber-600 italic">No topics added. Add at least one topic.</span>
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={newTopicInput}
                 onChange={(e) => setNewTopicInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTopic())}
                 placeholder="Type custom topic (e.g. RAG, Vision-Language Models)"
-                className="flex-1 bg-[#161a2a] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                className="flex-1 bg-neutral-50 border border-neutral-300 rounded-xl px-3.5 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:bg-white transition-all"
               />
               <button
                 type="button"
                 onClick={handleAddTopic}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-500/20 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add</span>
@@ -177,15 +156,15 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
             </div>
 
             <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-purple-400" /> Suggestions:
+              <span className="text-[11px] text-neutral-400 flex items-center gap-1 font-mono">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Suggestions:
               </span>
               {suggestedTopics.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => handleQuickAdd(s)}
-                  className="text-[11px] px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/10 text-slate-400 hover:text-purple-300 border border-white/5 transition-all cursor-pointer"
+                  className="text-[11px] px-2.5 py-0.5 rounded-full bg-white hover:bg-indigo-50 text-neutral-600 hover:text-indigo-700 border border-neutral-200/80 hover:border-indigo-200 transition-all cursor-pointer shadow-2xs"
                 >
                   +{s}
                 </button>
@@ -193,97 +172,48 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-3.5 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
-              <label className="block text-xs font-semibold text-cyan-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Automated Daily Schedule</span>
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-50/80 border border-neutral-200/80">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-semibold text-neutral-800 uppercase tracking-wider font-mono">
+                Minimum Quality Score Cutoff
               </label>
-              <div className="text-sm font-bold text-white font-outfit mt-0.5">
-                07:00 AM (Fixed Daily Cycle)
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                Digests dispatch automatically every morning at 7:00 AM. Click "Run Now" anytime on the dashboard for immediate briefings.
-              </p>
+              <span className="text-xs font-bold text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-indigo-200 font-mono shadow-2xs">
+                {minScore} / 10
+              </span>
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Minimum Relevance Score ({minScore}/10)
-              </label>
-              <input
-                type="range"
-                min="5"
-                max="9"
-                step="1"
-                value={minScore}
-                onChange={(e) => setMinScore(e.target.value)}
-                className="w-full accent-purple-500 mt-2 cursor-pointer"
-              />
-              <div className="flex justify-between text-[11px] text-slate-500 mt-1">
-                <span>5 (Broad)</span>
-                <span className="text-purple-400 font-semibold">{minScore} (Recommended: 7)</span>
-                <span>9 (Elite Only)</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/20">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-purple-200 uppercase tracking-wider flex items-center gap-1.5">
-                <Send className="w-3.5 h-3.5 text-purple-400" />
-                <span>Telegram Delivery Chat ID</span>
-              </label>
-              {telegramChatId && telegramChatId.trim() ? (
-                <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> Connected
-                </span>
-              ) : (
-                <span className="text-[11px] text-amber-400 font-medium flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> Not Linked
-                </span>
-              )}
-            </div>
+            <p className="text-[11px] sm:text-xs text-neutral-500 mb-3">
+              Incoming articles evaluated below this score by Groq will be filtered out automatically.
+            </p>
             <input
-              type="text"
-              value={telegramChatId}
-              onChange={(e) => setTelegramChatId(e.target.value)}
-              placeholder="e.g. 5479104426"
-              className="w-full bg-[#161a2a] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+              type="range"
+              min="5"
+              max="9"
+              step="1"
+              value={minScore}
+              onChange={(e) => setMinScore(e.target.value)}
+              className="w-full accent-indigo-600 cursor-pointer"
             />
-            <div className="mt-2 text-[11px] text-slate-400 space-y-1">
-              <p>• Find your Chat ID by messaging <b>@userinfobot</b> on Telegram.</p>
-              <p>• Make sure you have messaged your bot so it has permission to send you digests.</p>
+            <div className="flex justify-between text-[10px] sm:text-[11px] text-neutral-500 mt-1.5 font-mono">
+              <span>5 (Broad Discovery)</span>
+              <span className="text-indigo-600 font-bold">7 (Recommended Balance)</span>
+              <span>9 (Elite Nominees Only)</span>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Custom AI Persona & Filtering Prompt
-            </label>
-            <textarea
-              rows="2"
-              value={customInstructions}
-              onChange={(e) => setCustomInstructions(e.target.value)}
-              placeholder="e.g. Focus on production architectures, low-latency evaluation, and real-world benchmarks."
-              className="w-full bg-[#161a2a] border border-white/10 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 resize-none"
-            />
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-neutral-100 flex items-center justify-between bg-neutral-50/70">
           <div>
             {savedSuccess && (
-              <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                <CheckCircle className="w-4 h-4" /> Preferences saved!
+              <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1 font-mono">
+                <CheckCircle className="w-4 h-4 text-emerald-600" /> Preferences updated!
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 text-xs font-medium text-neutral-600 hover:text-neutral-900 rounded-full hover:bg-neutral-100 transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -291,7 +221,7 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50"
+              className="px-4 sm:px-5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold rounded-full shadow-sm shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save Preferences'}
             </button>

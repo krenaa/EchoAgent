@@ -1,5 +1,5 @@
 {
-  "name": "My workflow",
+  "name": "EchoAgent - Autonomous AI Research Intelligence",
   "nodes": [
     {
       "parameters": {
@@ -14,8 +14,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        0,
-        0
+        -720,
+        96
       ],
       "id": "ef4920bd-2578-483b-bbf3-b9fe0dd0f2ec",
       "name": "Daily Schedule Trigger"
@@ -29,16 +29,29 @@
               "responseFormat": "text"
             }
           }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "EchoAgent/1.0 (academic-research-digest)"
+            }
+          ]
         }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        208,
-        -160
+        -240,
+        32
       ],
       "id": "420439cf-ad1e-4039-91aa-f4a5efbf3db9",
-      "name": "Fetch arXiv Papers"
+      "name": "Fetch arXiv Papers",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
     },
     {
       "parameters": {
@@ -48,8 +61,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        208,
-        176
+        -16,
+        -32
       ],
       "id": "6ca9be66-f914-48d9-836c-27b0adc24a5d",
       "name": "Fetch Hacker News"
@@ -62,8 +75,8 @@
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
       "position": [
-        208,
-        0
+        224,
+        32
       ],
       "id": "e79d8158-c9b3-4eb2-8653-4ae06f3aceb4",
       "name": "Fetch Hugging Face RSS"
@@ -75,7 +88,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        544,
+        464,
         0
       ],
       "id": "ef9f3cd7-dd5b-485f-b588-52b9128f9b33",
@@ -123,7 +136,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const scoredItems = [];\n\nfor (let i = 0; i < $input.all().length; i++) {\n  const groqItem = $input.all()[i].json;\n  const original = $('Normalize & Merge Feeds').all()[i]?.json || {};\n  \n  let score = 5;\n  let reasoning = '';\n  \n  try {\n    const rawContent = groqItem.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(rawContent);\n    score = parseInt(parsed.relevance_score, 10) || 5;\n    reasoning = parsed.reasoning || '';\n  } catch (e) {\n    const match = (groqItem.choices?.[0]?.message?.content || '').match(/relevance_score[\"\\s:]+(\\d+)/i);\n    if (match) score = parseInt(match[1], 10);\n  }\n  \n  scoredItems.push({\n    json: {\n      source: original.source,\n      title: original.title,\n      item_url: original.item_url,\n      author: original.author,\n      content_snippet: original.content_snippet,\n      relevance_score: score,\n      scoring_reason: reasoning\n    }\n  });\n}\n\nreturn scoredItems;\n"
+        "jsCode": "const scoredItems = [];\n\nfor (let i = 0; i < $input.all().length; i++) {\n  const groqItem = $input.all()[i].json;\n  const original = $('Deduplication Memory').all()[i]?.json || $('Normalize & Merge Feeds').all()[i]?.json || {};\n  \n  if (original.is_up_to_date) {\n    scoredItems.push({\n      json: {\n        ...original,\n        relevance_score: 10\n      }\n    });\n    continue;\n  }\n  \n  let score = 5;\n  let reasoning = '';\n  try {\n    const rawContent = groqItem.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(rawContent);\n    score = parseInt(parsed.relevance_score, 10) || 5;\n    reasoning = parsed.reasoning || '';\n  } catch (e) {\n    const match = (groqItem.choices?.[0]?.message?.content || '').match(/relevance_score[\"\\s:]+(\\d+)/i);\n    if (match) score = parseInt(match[1], 10);\n  }\n  \n  scoredItems.push({\n    json: {\n      source: original.source,\n      title: original.title,\n      item_url: original.item_url,\n      author: original.author,\n      content_snippet: original.content_snippet,\n      relevance_score: score,\n      scoring_reason: reasoning\n    }\n  });\n}\n\nreturn scoredItems;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -210,33 +223,37 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Webhook Trigger').first()?.json?.body?.telegram_chat_id || '' }}",
-        "text": "<b>[EchoAgent] Pipeline Initialized</b>\n<blockquote>Scanning arXiv, Hacker News & RSS feeds for your active topics. Curated intelligence report will arrive in ~25 seconds.</blockquote>",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
+        "httpMethod": "POST",
+        "path": "trigger-digest",
+        "options": {},
+        "responseMode": "responseNode"
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
       "position": [
-        192,
-        384
+        -720,
+        -80
       ],
-      "id": "ca803640-eca5-4365-898a-7526cf5413b4",
-      "name": "Send Instant Ack",
-      "webhookId": "4a7fd025-d2e1-474d-a008-1032186a5213",
-      "retryOnFail": true,
-      "waitBetweenTries": 3000,
-      "credentials": {
-        "telegramApi": {
-          "id": "dUZWxHvUB5WUHNGA",
-          "name": "Telegram account"
-        }
-      }
+      "id": "fdf4cbdc-a0f1-49db-abc6-3df9ad8fbddb",
+      "name": "Webhook Trigger",
+      "webhookId": "1f2f5f46-c15e-45dd-92a7-861be9b033e1"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst today = new Date().toISOString().split('T')[0];\n\nif (items.length === 0) {\n  return [{\n    json: {\n      digest_html: `<b>[ECHOAGENT RESEARCH INTELLIGENCE]</b>\\n<code>${today}</code> | <b>STATUS: ALL CAUGHT UP</b>\\n\\n<blockquote>All recent arXiv papers, Hacker News discussions, and technical publications have already been delivered in your recent digest. No new high-signal breakthroughs were published in the interim.</blockquote>\\n\\n<i>Next automated cycle will execute on schedule.</i>`\n    }\n  }];\n}\n\nlet message = `<b>[ECHOAGENT RESEARCH INTELLIGENCE]</b>\\n`;\nmessage += `<b>Date:</b> <code>${today}</code> | <b>Status:</b> ${items.length} Qualified Breakthroughs\\n\\n`;\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  \n  let summary = 'Summary unavailable.';\n  let why = '';\n  \n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n  \n  const sourceTag = original.source ? `[${original.source.toUpperCase()}]` : '[RESEARCH]';\n  const score = original.relevance_score || 8;\n  \n  message += `━━━━━━━━━━━━━━━━━━━━━\\n`;\n  message += `<b>${i + 1}. ${sourceTag} ${original.title || 'Untitled'}</b>\\n`;\n  message += `<b>Relevance:</b> <code>${score}/10</code>\\n\\n`;\n  message += `<blockquote>${summary}</blockquote>\\n\\n`;\n  if (why) {\n    message += `<b>Why it matters:</b> <i>${why}</i>\\n\\n`;\n  }\n  if (original.item_url) {\n    message += `<a href=\"${original.item_url}\">[Read Source Publication]</a>\\n\\n`;\n  }\n}\n\nmessage += `━━━━━━━━━━━━━━━━━━━━━\\n<i>Delivered autonomously by EchoAgent Engine</i>`;\n\nreturn [{ json: { digest_html: message } }];\n"
+        "jsCode": "let staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n} catch (e) {\n  staticData = {};\n}\nstaticData.seenUrls = staticData.seenUrls || [];\n\nconst items = $input.all();\nconst brandNewItems = [];\n\nfor (const item of items) {\n  const url = item.json.item_url;\n  if (url && !staticData.seenUrls.includes(url)) {\n    brandNewItems.push(item);\n    staticData.seenUrls.push(url);\n  }\n}\n\nif (staticData.seenUrls.length > 500) {\n  staticData.seenUrls = staticData.seenUrls.slice(-500);\n}\n\nif (brandNewItems.length === 0) {\n  return [{\n    json: {\n      is_up_to_date: true,\n      source: 'arxiv',\n      title: 'Active Scope Up to Date',\n      item_url: '',\n      relevance_score: 10,\n      ai_summary: 'All recent arXiv papers, Hacker News discussions, and technical publications have already been indexed. No new breakthroughs published in the interim.',\n      why_it_matters: 'Confirms continuous monitoring while preventing duplicate alerts.'\n    }\n  }];\n}\n\nreturn brandNewItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        160
+      ],
+      "id": "3ffc1b74-14db-454c-8884-65dc4a775727",
+      "name": "Deduplication Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst formatted = [];\nconst today = new Date().toISOString().split('T')[0];\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  let summary = 'Executive briefing pending.';\n  let why = '';\n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n\n  formatted.push({\n    json: {\n      id: `digest_${Date.now()}_${i}`,\n      source: original.source || 'arxiv',\n      title: original.title || 'Untitled Research Breakthrough',\n      item_url: original.item_url || '',\n      author_or_submitter: original.author || 'AI Research Lab',\n      relevance_score: original.relevance_score || 8,\n      ai_summary: summary,\n      why_it_matters: why,\n      digest_date: today,\n      delivered_to_feed: true,\n      created_at: new Date().toISOString()\n    }\n  });\n}\n\nif (formatted.length === 0) {\n  formatted.push({\n    json: {\n      id: `digest_cached_${Date.now()}`,\n      source: 'arxiv',\n      title: 'Autonomous Scope Up to Date',\n      item_url: '',\n      author_or_submitter: 'EchoAgent Pipeline',\n      relevance_score: 9,\n      ai_summary: 'All recent arXiv preprints, Hacker News discussions, and Hugging Face releases are currently monitored and indexed.',\n      why_it_matters: 'Validates automated 24/7 background intelligence loop with zero redundant overhead.',\n      digest_date: today,\n      delivered_to_feed: true,\n      created_at: new Date().toISOString()\n    }\n  });\n}\n\nreturn formatted;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -245,33 +262,62 @@
         -16
       ],
       "id": "f3f9eb8d-c011-4271-a6e1-f4e06434d954",
-      "name": "Format Digest HTML"
+      "name": "Format Output Feed"
     },
     {
       "parameters": {
-        "chatId": "={{ $('Webhook Trigger').first()?.json?.body?.telegram_chat_id || '' }}",
-        "text": "={{ $json.digest_html }}",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
+        "method": "POST",
+        "url": "={{ ($env.VITE_SUPABASE_URL || 'https://your-project.supabase.co').replace(/\\/$/, '') + '/rest/v1/digest_items' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.VITE_SUPABASE_ANON_KEY || 'dummy_anon_key' }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.VITE_SUPABASE_ANON_KEY || 'dummy_anon_key' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.all().map(item => item.json)) }}",
+        "options": {}
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
       "position": [
-        1920,
+        1936,
         -16
       ],
-      "id": "827d6696-3b94-4519-ba10-bb5f9e684b23",
-      "name": "Send Final Digest",
-      "webhookId": "f28b2679-4f07-4573-a4e2-188fab176048",
-      "retryOnFail": true,
-      "waitBetweenTries": 3000,
-      "credentials": {
-        "telegramApi": {
-          "id": "dUZWxHvUB5WUHNGA",
-          "name": "Telegram account"
-        }
-      }
+      "id": "c71a3962-4217-48f0-bfae-a74e7cf45a19",
+      "name": "Save to Supabase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\nJSON.stringify({\n  success: true,\n  count: $('Format Output Feed').all().length,\n  items: $('Format Output Feed').all().map(i => i.json),\n  timestamp: new Date().toISOString()\n})\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2160,
+        -16
+      ],
+      "id": "d82b4a73-5328-4129-847e-8c6e28d0b2b1",
+      "name": "Respond to Webhook"
     }
   ],
   "connections": {
@@ -279,14 +325,14 @@
       "main": [
         [
           {
-            "node": "Send Instant Ack",
+            "node": "Fetch arXiv Papers",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send Instant Ack": {
+    "Webhook Trigger": {
       "main": [
         [
           {
@@ -334,6 +380,17 @@
       "main": [
         [
           {
+            "node": "Deduplication Memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplication Memory": {
+      "main": [
+        [
+          {
             "node": "AI Relevance Scoring",
             "type": "main",
             "index": 0
@@ -378,18 +435,29 @@
       "main": [
         [
           {
-            "node": "Format Digest HTML",
+            "node": "Format Output Feed",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Format Digest HTML": {
+    "Format Output Feed": {
       "main": [
         [
           {
-            "node": "Send Final Digest",
+            "node": "Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }

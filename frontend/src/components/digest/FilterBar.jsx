@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, Sparkles } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export const FilterBar = ({
   sourceFilter,
@@ -11,7 +11,7 @@ export const FilterBar = ({
   counts
 }) => {
   const sources = [
-    { id: 'all', label: 'All Sources', count: counts.all },
+    { id: 'all', label: 'All Intelligence', count: counts.all },
     { id: 'arxiv', label: 'arXiv Papers', count: counts.arxiv },
     { id: 'hackernews', label: 'Hacker News', count: counts.hackernews },
     { id: 'rss', label: 'AI Blogs & RSS', count: counts.rss }
@@ -25,24 +25,23 @@ export const FilterBar = ({
   ];
 
   return (
-    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6">
-      {/* Source Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-white/[0.03] border border-white/10 rounded-2xl overflow-x-auto">
+    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className="flex items-center gap-1.5 p-1 bg-neutral-200/50 border border-neutral-300/80 rounded-full overflow-x-auto scrollbar-none max-w-full">
         {sources.map((source) => {
           const isActive = sourceFilter === source.id;
           return (
             <button
               key={source.id}
               onClick={() => setSourceFilter(source.id)}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                 isActive
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/25'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-indigo-600 text-white shadow-sm font-semibold'
+                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60'
               }`}
             >
               <span>{source.label}</span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                isActive ? 'bg-indigo-700 text-white' : 'bg-neutral-300/70 text-neutral-600'
               }`}>
                 {source.count}
               </span>
@@ -51,18 +50,16 @@ export const FilterBar = ({
         })}
       </div>
 
-      {/* Search & Score Filter Group */}
-      <div className="flex items-center gap-3">
-        {/* Score Threshold Filter */}
-        <div className="flex items-center gap-1 p-1 bg-white/[0.03] border border-white/10 rounded-xl">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+        <div className="flex items-center gap-1 p-1 bg-neutral-200/50 border border-neutral-300/80 rounded-full overflow-x-auto scrollbar-none">
           {scoreOptions.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setScoreFilter(opt.value)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-center ${
                 scoreFilter === opt.value
-                  ? 'bg-white/15 text-purple-300 font-semibold shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white text-indigo-700 font-semibold shadow-xs border border-indigo-200'
+                  : 'text-neutral-500 hover:text-neutral-900'
               }`}
             >
               {opt.label}
@@ -70,15 +67,14 @@ export const FilterBar = ({
           ))}
         </div>
 
-        {/* Search Input */}
-        <div className="relative min-w-[200px] flex-1 md:flex-initial">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="relative min-w-full sm:min-w-[210px] flex-1">
+          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search papers..."
-            className="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-9 pr-3.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
+            placeholder="Search papers & articles..."
+            className="w-full bg-white border border-neutral-300 rounded-full pl-9 pr-4 py-1.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs transition-colors"
           />
         </div>
       </div>
