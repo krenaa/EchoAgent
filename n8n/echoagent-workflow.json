@@ -3,26 +3,24 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 7
-            }
-          ]
-        }
+        "httpMethod": "POST",
+        "path": "trigger-digest",
+        "options": {},
+        "responseMode": "responseNode"
       },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
       "position": [
-        -720,
-        96
+        -560,
+        0
       ],
-      "id": "ef4920bd-2578-483b-bbf3-b9fe0dd0f2ec",
-      "name": "Daily Schedule Trigger"
+      "id": "fdf4cbdc-a0f1-49db-abc6-3df9ad8fbddb",
+      "name": "Webhook Trigger",
+      "webhookId": "1f2f5f46-c15e-45dd-92a7-861be9b033e1"
     },
     {
       "parameters": {
-        "url": "https://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.CL&max_results=8&sortBy=submittedDate&sortOrder=descending",
+        "url": "={{ 'https://export.arxiv.org/api/query?search_query=' + ((($('Webhook Trigger').first()?.json?.body?.categories && Array.isArray($('Webhook Trigger').first()?.json?.body?.categories)) ? $('Webhook Trigger').first().json.body.categories : ['cs.AI', 'cs.LG', 'cs.CL']).map(c => 'cat:' + c).join('+OR+')) + '&max_results=8&sortBy=submittedDate&sortOrder=descending' }}",
         "options": {
           "response": {
             "response": {
@@ -43,8 +41,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -240,
-        32
+        -280,
+        0
       ],
       "id": "420439cf-ad1e-4039-91aa-f4a5efbf3db9",
       "name": "Fetch arXiv Papers",
@@ -61,8 +59,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -16,
-        -32
+        -40,
+        0
       ],
       "id": "6ca9be66-f914-48d9-836c-27b0adc24a5d",
       "name": "Fetch Hacker News"
@@ -75,24 +73,37 @@
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
       "position": [
-        224,
-        32
+        200,
+        0
       ],
       "id": "e79d8158-c9b3-4eb2-8653-4ae06f3aceb4",
       "name": "Fetch Hugging Face RSS"
     },
     {
       "parameters": {
-        "jsCode": "const unifiedItems = [];\n\ntry {\n  const hnData = $('Fetch Hacker News').first()?.json;\n  const hnHits = hnData?.hits || [];\n  \n  for (const hit of hnHits.slice(0, 5)) {\n    const itemUrl = hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`;\n    unifiedItems.push({\n      json: {\n        source: 'hackernews',\n        title: hit.title || 'Untitled HN Discussion',\n        item_url: itemUrl,\n        author: hit.author || 'Anonymous',\n        content_snippet: hit.story_text || `HN Points: ${hit.points || 0} | Comments: ${hit.num_comments || 0}`\n      }\n    });\n  }\n} catch (err) {\n  console.log('Error parsing Hacker News:', err.message);\n}\n\n\ntry {\n  const rssItems = $('Fetch Hugging Face RSS').all();\n  \n  for (const item of rssItems.slice(0, 5)) {\n    const data = item.json;\n    unifiedItems.push({\n      json: {\n        source: 'rss',\n        title: data.title || 'Untitled Blog Post',\n        item_url: data.link || '',\n        author: data.creator || 'Hugging Face Research',\n        content_snippet: (data.contentSnippet || data.content || '').substring(0, 400)\n      }\n    });\n  }\n} catch (err) {\n  console.log('Error parsing RSS:', err.message);\n}\n\ntry {\n  const arxivRaw = $('Fetch arXiv Papers').first()?.json?.data || '';\n  const entryMatches = arxivRaw.match(/<entry>[\\s\\S]*?<\\/entry>/g) || [];\n  \n  for (const entry of entryMatches.slice(0, 5)) {\n    const titleMatch = entry.match(/<title>([\\s\\S]*?)<\\/title>/);\n    const idMatch = entry.match(/<id>([\\s\\S]*?)<\\/id>/);\n    const summaryMatch = entry.match(/<summary>([\\s\\S]*?)<\\/summary>/);\n    const authorMatch = entry.match(/<author>\\s*<name>(.*?)<\\/name>/);\n    \n    const title = titleMatch ? titleMatch[1].replace(/\\n/g, ' ').trim() : 'Untitled Paper';\n    const itemUrl = idMatch ? idMatch[1].trim() : '';\n    const summary = summaryMatch ? summaryMatch[1].replace(/\\n/g, ' ').trim().substring(0, 400) : '';\n    const author = authorMatch ? authorMatch[1].trim() : 'arXiv Author';\n    \n    if (itemUrl) {\n      unifiedItems.push({\n        json: {\n          source: 'arxiv',\n          title: title,\n          item_url: itemUrl,\n          author: author,\n          content_snippet: summary\n        }\n      });\n    }\n  }\n} catch (err) {\n  console.log('Error parsing arXiv:', err.message);\n}\n\nreturn unifiedItems;\n"
+        "jsCode": "const unifiedItems = [];\n\ntry {\n  const hnData = $('Fetch Hacker News').first()?.json;\n  const hnHits = hnData?.hits || [];\n  \n  for (const hit of hnHits.slice(0, 5)) {\n    const itemUrl = hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`;\n    unifiedItems.push({\n      json: {\n        source: 'hackernews',\n        title: hit.title || 'Untitled HN Discussion',\n        item_url: itemUrl,\n        author: hit.author || 'Anonymous',\n        content_snippet: hit.story_text || `HN Points: ${hit.points || 0} | Comments: ${hit.num_comments || 0}`\n      }\n    });\n  }\n} catch (err) {\n  console.log('Error parsing Hacker News:', err.message);\n}\n\ntry {\n  const rssItems = $('Fetch Hugging Face RSS').all();\n  \n  for (const item of rssItems.slice(0, 5)) {\n    const data = item.json;\n    unifiedItems.push({\n      json: {\n        source: 'rss',\n        title: data.title || 'Untitled Blog Post',\n        item_url: data.link || '',\n        author: data.creator || 'Hugging Face Research',\n        content_snippet: (data.contentSnippet || data.content || '').substring(0, 400)\n      }\n    });\n  }\n} catch (err) {\n  console.log('Error parsing RSS:', err.message);\n}\n\ntry {\n  const arxivRaw = $('Fetch arXiv Papers').first()?.json?.data || '';\n  const entryMatches = arxivRaw.match(/<entry>[\\s\\S]*?<\\/entry>/g) || [];\n  \n  for (const entry of entryMatches.slice(0, 5)) {\n    const titleMatch = entry.match(/<title>([\\s\\S]*?)<\\/title>/);\n    const idMatch = entry.match(/<id>([\\s\\S]*?)<\\/id>/);\n    const summaryMatch = entry.match(/<summary>([\\s\\S]*?)<\\/summary>/);\n    const authorMatch = entry.match(/<author>\\s*<name>(.*?)<\\/name>/);\n    \n    const title = titleMatch ? titleMatch[1].replace(/\\n/g, ' ').trim() : 'Untitled Paper';\n    const itemUrl = idMatch ? idMatch[1].trim() : '';\n    const summary = summaryMatch ? summaryMatch[1].replace(/\\n/g, ' ').trim().substring(0, 400) : '';\n    const author = authorMatch ? authorMatch[1].trim() : 'arXiv Author';\n    \n    if (itemUrl) {\n      unifiedItems.push({\n        json: {\n          source: 'arxiv',\n          title: title,\n          item_url: itemUrl,\n          author: author,\n          content_snippet: summary\n        }\n      });\n    }\n  }\n} catch (err) {\n  console.log('Error parsing arXiv:', err.message);\n}\n\nreturn unifiedItems;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        464,
+        440,
         0
       ],
       "id": "ef9f3cd7-dd5b-485f-b588-52b9128f9b33",
       "name": "Normalize & Merge Feeds"
+    },
+    {
+      "parameters": {
+        "jsCode": "let staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n} catch (e) {\n  staticData = {};\n}\nstaticData.seenUrls = staticData.seenUrls || [];\n\nconst items = $input.all();\nconst brandNewItems = [];\n\nfor (const item of items) {\n  const url = item.json.item_url;\n  if (url && !staticData.seenUrls.includes(url)) {\n    brandNewItems.push(item);\n    staticData.seenUrls.push(url);\n  }\n}\n\nif (staticData.seenUrls.length > 500) {\n  staticData.seenUrls = staticData.seenUrls.slice(-500);\n}\n\nif (brandNewItems.length === 0) {\n  return [{\n    json: {\n      is_up_to_date: true,\n      source: 'arxiv',\n      title: 'Active Scope Up to Date',\n      item_url: '',\n      relevance_score: 10,\n      ai_summary: 'All recent arXiv papers, Hacker News discussions, and technical publications have already been indexed. No new breakthroughs published in the interim.',\n      why_it_matters: 'Confirms continuous monitoring while preventing duplicate alerts.'\n    }\n  }];\n}\n\nreturn brandNewItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        0
+      ],
+      "id": "3ffc1b74-14db-454c-8884-65dc4a775727",
+      "name": "Deduplication Memory"
     },
     {
       "parameters": {
@@ -113,7 +124,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{\n(() => {\n  const topics = ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs'];\n  const instructions = 'Prioritize production architectures and benchmarks.';\n  const shortSnippet = ($json.content_snippet || '').substring(0, 150);\n\n  return JSON.stringify({\n    model: \"openai/gpt-oss-20b\",\n    temperature: 0.2,\n    response_format: { type: \"json_object\" },\n    messages: [\n      {\n        role: \"system\",\n        content: `You are a research relevance evaluator for an AI engineer interested in: ${topics.join(', ')}. Instructions: ${instructions}. Return ONLY a JSON object: {\"relevance_score\": <int 1-10>, \"reasoning\": \"<short sentence>\"}.`\n      },\n      {\n        role: \"user\",\n        content: `Title: ${$json.title}\\nSource: ${$json.source}\\nSnippet: ${shortSnippet}`\n      }\n    ]\n  });\n})()\n}}\n",
+        "jsonBody": "={{\n(() => {\n  const webhookBody = $('Webhook Trigger').first()?.json?.body || {};\n  const topics = (Array.isArray(webhookBody.topics) && webhookBody.topics.length > 0)\n    ? webhookBody.topics\n    : ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs'];\n  const instructions = 'Prioritize production architectures and benchmarks.';\n  const shortSnippet = ($json.content_snippet || '').substring(0, 150);\n\n  return JSON.stringify({\n    model: \"openai/gpt-oss-20b\",\n    temperature: 0.2,\n    response_format: { type: \"json_object\" },\n    messages: [\n      {\n        role: \"system\",\n        content: `You are a research relevance evaluator for an AI engineer interested in: ${topics.join(', ')}. Instructions: ${instructions}. Return ONLY a JSON object: {\"relevance_score\": <int 1-10>, \"reasoning\": \"<short sentence>\"}.`\n      },\n      {\n        role: \"user\",\n        content: `Title: ${$json.title}\\nSource: ${$json.source}\\nSnippet: ${shortSnippet}`\n      }\n    ]\n  });\n})()\n}}\n",
         "options": {
           "batching": {
             "batch": {
@@ -126,7 +137,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        800,
+        920,
         0
       ],
       "id": "1709d3e9-fbd4-4c3a-ab42-50f33a24fda7",
@@ -141,7 +152,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1008,
+        1160,
         0
       ],
       "id": "aa38842f-9ecc-4a14-9422-9072662c4326",
@@ -160,7 +171,7 @@
             {
               "id": "b0c6a82e-20ef-4605-970d-635ff22b3e0e",
               "leftValue": "={{ $json.relevance_score }}",
-              "rightValue": 6,
+              "rightValue": "={{ parseInt($('Webhook Trigger').first()?.json?.body?.minScore, 10) || 6 }}",
               "operator": {
                 "type": "number",
                 "operation": "gte"
@@ -175,7 +186,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1216,
+        1400,
         0
       ],
       "id": "f8b3375d-d0c9-4c55-a76a-dff1bcc38db5",
@@ -213,8 +224,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1504,
-        -16
+        1640,
+        0
       ],
       "id": "9bdf5793-bed1-4cf3-9edc-166bed4894d6",
       "name": "AI Summarizer",
@@ -223,43 +234,13 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "trigger-digest",
-        "options": {},
-        "responseMode": "responseNode"
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -720,
-        -80
-      ],
-      "id": "fdf4cbdc-a0f1-49db-abc6-3df9ad8fbddb",
-      "name": "Webhook Trigger",
-      "webhookId": "1f2f5f46-c15e-45dd-92a7-861be9b033e1"
-    },
-    {
-      "parameters": {
-        "jsCode": "let staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n} catch (e) {\n  staticData = {};\n}\nstaticData.seenUrls = staticData.seenUrls || [];\n\nconst items = $input.all();\nconst brandNewItems = [];\n\nfor (const item of items) {\n  const url = item.json.item_url;\n  if (url && !staticData.seenUrls.includes(url)) {\n    brandNewItems.push(item);\n    staticData.seenUrls.push(url);\n  }\n}\n\nif (staticData.seenUrls.length > 500) {\n  staticData.seenUrls = staticData.seenUrls.slice(-500);\n}\n\nif (brandNewItems.length === 0) {\n  return [{\n    json: {\n      is_up_to_date: true,\n      source: 'arxiv',\n      title: 'Active Scope Up to Date',\n      item_url: '',\n      relevance_score: 10,\n      ai_summary: 'All recent arXiv papers, Hacker News discussions, and technical publications have already been indexed. No new breakthroughs published in the interim.',\n      why_it_matters: 'Confirms continuous monitoring while preventing duplicate alerts.'\n    }\n  }];\n}\n\nreturn brandNewItems;"
+        "jsCode": "const items = $input.all();\nconst formatted = [];\nconst today = new Date().toISOString().split('T')[0];\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  let summary = 'Executive briefing pending.';\n  let why = '';\n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n\n  formatted.push({\n    json: {\n      id: `digest_${Date.now()}_${i}`,\n      source: original.source || 'arxiv',\n      title: original.title || 'Untitled Research Breakthrough',\n      item_url: original.item_url || '',\n      author_or_submitter: original.author || 'AI Research Lab',\n      relevance_score: original.relevance_score || 8,\n      ai_summary: summary,\n      why_it_matters: why,\n      raw_content_snippet: original.content_snippet || '',\n      digest_date: today,\n      delivered_to_feed: true,\n      created_at: new Date().toISOString()\n    }\n  });\n}\n\nif (formatted.length === 0) {\n  formatted.push({\n    json: {\n      id: `digest_cached_${Date.now()}`,\n      source: 'arxiv',\n      title: 'Autonomous Scope Up to Date',\n      item_url: '',\n      author_or_submitter: 'EchoAgent Pipeline',\n      relevance_score: 9,\n      ai_summary: 'All recent arXiv preprints, Hacker News discussions, and Hugging Face releases are currently monitored and indexed.',\n      why_it_matters: 'Validates automated on-demand intelligence loop with zero redundant overhead.',\n      raw_content_snippet: '',\n      digest_date: today,\n      delivered_to_feed: true,\n      created_at: new Date().toISOString()\n    }\n  });\n}\n\nreturn formatted;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        624,
-        160
-      ],
-      "id": "3ffc1b74-14db-454c-8884-65dc4a775727",
-      "name": "Deduplication Memory"
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst formatted = [];\nconst today = new Date().toISOString().split('T')[0];\n\nfor (let i = 0; i < items.length; i++) {\n  const groqRes = items[i].json;\n  const original = $('Filter High Relevance').all()[i]?.json || {};\n  let summary = 'Executive briefing pending.';\n  let why = '';\n  try {\n    const raw = groqRes.choices?.[0]?.message?.content || '{}';\n    const parsed = JSON.parse(raw);\n    summary = parsed.ai_summary || summary;\n    why = parsed.why_it_matters || '';\n  } catch (e) {\n    summary = groqRes.choices?.[0]?.message?.content || summary;\n  }\n\n  formatted.push({\n    json: {\n      id: `digest_${Date.now()}_${i}`,\n      source: original.source || 'arxiv',\n      title: original.title || 'Untitled Research Breakthrough',\n      item_url: original.item_url || '',\n      author_or_submitter: original.author || 'AI Research Lab',\n      relevance_score: original.relevance_score || 8,\n      ai_summary: summary,\n      why_it_matters: why,\n      digest_date: today,\n      delivered_to_feed: true,\n      created_at: new Date().toISOString()\n    }\n  });\n}\n\nif (formatted.length === 0) {\n  formatted.push({\n    json: {\n      id: `digest_cached_${Date.now()}`,\n      source: 'arxiv',\n      title: 'Autonomous Scope Up to Date',\n      item_url: '',\n      author_or_submitter: 'EchoAgent Pipeline',\n      relevance_score: 9,\n      ai_summary: 'All recent arXiv preprints, Hacker News discussions, and Hugging Face releases are currently monitored and indexed.',\n      why_it_matters: 'Validates automated 24/7 background intelligence loop with zero redundant overhead.',\n      digest_date: today,\n      delivered_to_feed: true,\n      created_at: new Date().toISOString()\n    }\n  });\n}\n\nreturn formatted;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1712,
-        -16
+        1880,
+        0
       ],
       "id": "f3f9eb8d-c011-4271-a6e1-f4e06434d954",
       "name": "Format Output Feed"
@@ -297,8 +278,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1936,
-        -16
+        2120,
+        0
       ],
       "id": "c71a3962-4217-48f0-bfae-a74e7cf45a19",
       "name": "Save to Supabase",
@@ -313,25 +294,14 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2160,
-        -16
+        2360,
+        0
       ],
       "id": "d82b4a73-5328-4129-847e-8c6e28d0b2b1",
       "name": "Respond to Webhook"
     }
   ],
   "connections": {
-    "Daily Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "Fetch arXiv Papers",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Webhook Trigger": {
       "main": [
         [

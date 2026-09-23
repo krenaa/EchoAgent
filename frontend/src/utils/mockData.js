@@ -4,6 +4,13 @@ export const initialMockPreferences = {
   email: 'researcher@echoagent.ai',
   topics: ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs', 'Local AI'],
   custom_instructions: 'Prioritize production architectures, low-latency evaluation, and real-world benchmarks. Filter out generic beginner tutorials.',
+  custom_sources: {
+    arxiv_categories: ['cs.AI', 'cs.CL', 'cs.LG'],
+    rss_feeds: [
+      'https://blog.langchain.dev/rss/',
+      'https://huggingface.co/blog/feed.xml'
+    ]
+  },
   min_score: 7,
   is_active: true,
   scheduled_time: '07:00:00',

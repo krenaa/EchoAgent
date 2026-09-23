@@ -6,6 +6,8 @@ import { FilterBar } from '../components/digest/FilterBar';
 import { DigestCard } from '../components/digest/DigestCard';
 import { PreferencesModal } from '../components/settings/PreferencesModal';
 import { RunNowModal } from '../components/common/RunNowModal';
+import { AskAgentDrawer } from '../components/digest/AskAgentDrawer';
+import { ExportModal } from '../components/digest/ExportModal';
 import { Inbox, LayoutGrid, Rows } from 'lucide-react';
 
 const normalizeSource = (src) => {
@@ -24,6 +26,11 @@ export const Dashboard = () => {
 
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isRunNowOpen, setIsRunNowOpen] = useState(false);
+  const [activeAskPaper, setActiveAskPaper] = useState(null);
+  const [isAskAgentOpen, setIsAskAgentOpen] = useState(false);
+  const [activeExportPaper, setActiveExportPaper] = useState(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
   const [sourceFilter, setSourceFilter] = useState('all');
   const [scoreFilter, setScoreFilter] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,6 +56,16 @@ export const Dashboard = () => {
       topics: preferences?.topics || [],
       minScore: preferences?.min_score || 7
     });
+  };
+
+  const handleOpenAskAgent = (paper) => {
+    setActiveAskPaper(paper);
+    setIsAskAgentOpen(true);
+  };
+
+  const handleOpenExport = (paper) => {
+    setActiveExportPaper(paper);
+    setIsExportOpen(true);
   };
 
   const counts = useMemo(() => {
@@ -196,7 +213,12 @@ export const Dashboard = () => {
         ) : filteredItems.length > 0 ? (
           <div className={gridColumns === 'two' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'max-w-3xl mx-auto space-y-6'}>
             {filteredItems.map((item) => (
-              <DigestCard key={item.id || item.item_url} item={item} />
+              <DigestCard 
+                key={item.id || item.item_url} 
+                item={item} 
+                onAskAgent={handleOpenAskAgent}
+                onExport={handleOpenExport}
+              />
             ))}
           </div>
         ) : (
@@ -226,6 +248,18 @@ export const Dashboard = () => {
       <RunNowModal 
         isOpen={isRunNowOpen}
         onClose={() => setIsRunNowOpen(false)}
+      />
+
+      <AskAgentDrawer
+        isOpen={isAskAgentOpen}
+        onClose={() => setIsAskAgentOpen(false)}
+        paper={activeAskPaper}
+      />
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        paper={activeExportPaper}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDigests } from '../api/useDigests';
 import { 
@@ -10,14 +10,20 @@ import {
   Lightbulb, 
   Calendar, 
   User, 
-  FileText
+  FileText,
+  Share2,
+  Bot
 } from 'lucide-react';
+import { AskAgentDrawer } from '../components/digest/AskAgentDrawer';
+import { ExportModal } from '../components/digest/ExportModal';
 
 export const DigestDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: items = [] } = useDigests();
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isAskAgentOpen, setIsAskAgentOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const item = items.find(i => String(i.id) === String(id)) || items[0];
 
@@ -44,13 +50,33 @@ export const DigestDetail = () => {
   return (
     <div className="min-h-screen bg-[#fbfbfa] text-neutral-800 py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 px-3.5 py-1.5 rounded-full bg-white border border-neutral-300/80 hover:bg-neutral-100 transition-colors cursor-pointer shadow-2xs"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Feed</span>
-        </button>
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-600 hover:text-neutral-900 px-3.5 py-1.5 rounded-full bg-white border border-neutral-300/80 hover:bg-neutral-100 transition-colors cursor-pointer shadow-2xs"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Feed</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAskAgentOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold border border-indigo-200 shadow-2xs transition-all cursor-pointer"
+            >
+              <Bot className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Ask Agent</span>
+            </button>
+
+            <button
+              onClick={() => setIsExportOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium border border-neutral-300 shadow-2xs transition-all cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
 
         <div className="bg-white border border-[#e8e8e3] rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5 sm:mb-6 pb-5 sm:pb-6 border-b border-neutral-100">
@@ -141,6 +167,18 @@ export const DigestDetail = () => {
           </div>
         </div>
       </div>
+
+      <AskAgentDrawer
+        isOpen={isAskAgentOpen}
+        onClose={() => setIsAskAgentOpen(false)}
+        paper={item}
+      />
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        paper={item}
+      />
     </div>
   );
 };
