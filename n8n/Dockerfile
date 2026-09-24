@@ -1,9 +1,11 @@
-# ==============================================================================
-# EchoAgent: n8n Dockerfile for Render Cloud Web Service (100% Free Tier)
-# ==============================================================================
 FROM n8nio/n8n:latest
 
-# Expose standard n8n port
+ENV N8N_PORT=5678
+ENV N8N_HOST=0.0.0.0
+ENV N8N_PROTOCOL=https
+ENV EXECUTIONS_DATA_PRUNE=true
+ENV EXECUTIONS_DATA_MAX_AGE=24
+
 EXPOSE 5678
 
 CMD ["n8n", "start"]
