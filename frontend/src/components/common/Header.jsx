@@ -5,10 +5,11 @@ import {
   Play, 
   Sliders, 
   LogOut, 
-  Calendar
+  Calendar,
+  Lock
 } from 'lucide-react';
 
-export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
+export const Header = ({ onOpenPreferences, onTriggerRunNow, running, demoScanLimitReached = false }) => {
   const { user, logout } = useAuth();
   const today = new Date().toLocaleDateString('en-US', { 
     month: 'short', 
@@ -57,15 +58,27 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running }) => {
             <Sliders className="w-3 h-3 text-neutral-400" />
           </button>
 
-          <button
-            onClick={onTriggerRunNow}
-            disabled={running}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
-          >
-            <Play className="w-3 h-3 fill-white" />
-            <span className="hidden sm:inline">{running ? 'Scanning...' : 'Scan Now'}</span>
-            <span className="sm:hidden">{running ? '...' : 'Scan'}</span>
-          </button>
+          {demoScanLimitReached ? (
+            <button
+              onClick={onTriggerRunNow}
+              title="1-Click Demo limit reached (1 scan allowed). Sign in with Google for unlimited live scans."
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-xs font-semibold text-neutral-600 shadow-2xs transition-all cursor-pointer"
+            >
+              <Lock className="w-3 h-3 text-neutral-400" />
+              <span className="hidden sm:inline">1 Scan Used (Demo)</span>
+              <span className="sm:hidden">Limit</span>
+            </button>
+          ) : (
+            <button
+              onClick={onTriggerRunNow}
+              disabled={running}
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Play className="w-3 h-3 fill-white" />
+              <span className="hidden sm:inline">{running ? 'Scanning...' : 'Scan Now'}</span>
+              <span className="sm:hidden">{running ? '...' : 'Scan'}</span>
+            </button>
+          )}
 
           <button
             onClick={logout}

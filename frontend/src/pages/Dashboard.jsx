@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDigests, useTriggerDigest } from '../api/useDigests';
 import { Header } from '../components/common/Header';
@@ -8,7 +9,7 @@ import { PreferencesModal } from '../components/settings/PreferencesModal';
 import { RunNowModal } from '../components/common/RunNowModal';
 import { AskAgentDrawer } from '../components/digest/AskAgentDrawer';
 import { ExportModal } from '../components/digest/ExportModal';
-import { Inbox, LayoutGrid, Rows } from 'lucide-react';
+import { Inbox, LayoutGrid, Rows, Lock, Sparkles, X } from 'lucide-react';
 
 const normalizeSource = (src) => {
   if (!src) return '';
@@ -20,9 +21,14 @@ const normalizeSource = (src) => {
 };
 
 export const Dashboard = () => {
-  const { preferences } = useAuth();
+  const { preferences, user, logout } = useAuth();
+  const navigate = useNavigate();
   const { data: items = [], isLoading } = useDigests(preferences?.topics || []);
   const triggerMutation = useTriggerDigest();
+
+  const isDemoUser = Boolean(user?.is_demo || user?.email === 'researcher@echoagent.ai');
+  const [demoScanUsed, setDemoScanUsed] = useState(() => localStorage.getItem('echoagent_demo_scan_used') === 'true');
+  const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
 
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isRunNowOpen, setIsRunNowOpen] = useState(false);
@@ -51,6 +57,16 @@ export const Dashboard = () => {
   }, [displayTopics, selectedTopic]);
 
   const handleTriggerRunNow = () => {
+    if (isDemoUser && demoScanUsed) {
+      setShowDemoLimitModal(true);
+      return;
+    }
+
+    if (isDemoUser) {
+      setDemoScanUsed(true);
+      localStorage.setItem('echoagent_demo_scan_used', 'true');
+    }
+
     setIsRunNowOpen(true);
     triggerMutation.mutate({
       topics: preferences?.topics || [],
@@ -131,6 +147,7 @@ export const Dashboard = () => {
         onOpenPreferences={() => setIsPreferencesOpen(true)}
         onTriggerRunNow={handleTriggerRunNow}
         running={triggerMutation.isPending}
+        demoScanLimitReached={isDemoUser && demoScanUsed}
       />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -159,62 +176,50 @@ export const Dashboard = () => {
                 className={`p-1.5 rounded-full transition-all cursor-pointer ${
                   gridColumns === 'two' ? 'bg-white text-neutral-900 shadow-2xs' : 'text-neutral-500 hover:text-neutral-800'
                 }`}
-                title="Grid View"
+                title="2-Column Detailed Cards"
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
+                <Rows className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setGridColumns('one')}
+                onClick={() => setGridColumns('three')}
                 className={`p-1.5 rounded-full transition-all cursor-pointer ${
-                  gridColumns === 'one' ? 'bg-white text-neutral-900 shadow-2xs' : 'text-neutral-500 hover:text-neutral-800'
+                  gridColumns === 'three' ? 'bg-white text-neutral-900 shadow-2xs' : 'text-neutral-500 hover:text-neutral-800'
                 }`}
-                title="Single Column View"
+                title="3-Column Compact Grid"
               >
-                <Rows className="w-3.5 h-3.5" />
+                <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 flex-shrink-0 mr-1">
-            Focus:
-          </span>
-          {displayTopics.map((topic) => (
-            <button
-              key={topic}
-              onClick={() => setSelectedTopic(topic)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer border ${
-                selectedTopic === topic
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs font-semibold'
-                  : 'bg-white hover:bg-neutral-100 text-neutral-600 border-neutral-200 shadow-2xs'
-              }`}
-            >
-              {topic}
-            </button>
-          ))}
-        </div>
-
         <FilterBar 
+          topics={displayTopics}
+          selectedTopic={selectedTopic}
+          onSelectTopic={setSelectedTopic}
           sourceFilter={sourceFilter}
-          setSourceFilter={setSourceFilter}
+          onSourceFilterChange={setSourceFilter}
           scoreFilter={scoreFilter}
-          setScoreFilter={setScoreFilter}
+          onScoreFilterChange={setScoreFilter}
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          onSearchChange={setSearchQuery}
           counts={counts}
         />
 
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center text-neutral-400">
-            <div className="w-9 h-9 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin mb-3" />
-            <p className="text-xs font-mono uppercase tracking-wider text-neutral-500">Curating Live Radar...</p>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-10 h-10 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-xs font-mono text-neutral-500">Querying live Supabase radar records...</p>
           </div>
         ) : filteredItems.length > 0 ? (
-          <div className={gridColumns === 'two' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'max-w-3xl mx-auto space-y-6'}>
-            {filteredItems.map((item) => (
+          <div className={`grid gap-5 sm:gap-6 ${
+            gridColumns === 'three' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+              : 'grid-cols-1 lg:grid-cols-2'
+          }`}>
+            {filteredItems.map(item => (
               <DigestCard 
-                key={item.id || item.item_url} 
+                key={item.id} 
                 item={item} 
                 onAskAgent={handleOpenAskAgent}
                 onExport={handleOpenExport}
@@ -222,11 +227,11 @@ export const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center bg-white rounded-3xl p-8 border border-[#e8e8e3] shadow-xs">
-            <div className="w-12 h-12 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto text-neutral-400 mb-3">
+          <div className="text-center py-16 px-4 bg-white border border-[#e8e8e3] rounded-3xl">
+            <div className="w-12 h-12 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto mb-3 text-neutral-400">
               <Inbox className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-neutral-900 mb-1 font-display">No nominees match this filter</h3>
+            <h3 className="text-base font-bold text-neutral-900 font-display mb-1">No breakthroughs found</h3>
             <p className="text-xs text-neutral-500 max-w-sm mx-auto mb-4">
               Try switching topics or resetting your score threshold to discover more papers.
             </p>
@@ -261,6 +266,49 @@ export const Dashboard = () => {
         onClose={() => setIsExportOpen(false)}
         paper={activeExportPaper}
       />
+
+      {showDemoLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-neutral-200 shadow-2xl relative text-center">
+            <button
+              onClick={() => setShowDemoLimitModal(false)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1.5 rounded-full hover:bg-neutral-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-4 shadow-2xs">
+              <Lock className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-lg font-bold text-neutral-900 tracking-tight font-display mb-1.5">
+              Demo Scan Limit Reached
+            </h3>
+            <p className="text-xs text-neutral-500 leading-relaxed mb-6">
+              The 1-Click Demo account includes exactly <strong className="text-neutral-800">1 complimentary live pipeline scan</strong>. You have already executed your scan for this demo session.
+            </p>
+
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-full font-semibold text-xs transition-all shadow-sm shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Sign In with Google for Unlimited Scans</span>
+              </button>
+              <button
+                onClick={() => setShowDemoLimitModal(false)}
+                className="w-full py-2 px-4 text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors"
+              >
+                Continue Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -294,11 +294,42 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2360,
+        2840,
         0
       ],
       "id": "d82b4a73-5328-4129-847e-8c6e28d0b2b1",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $('Format Output Feed').all().map(i => i.json).filter(i => !i.is_up_to_date).slice(0, 3);\nconst webhookData = $('Webhook Trigger').first()?.json?.body || {};\nconst recipientEmail = webhookData.email || 'researcher@gmail.com';\nconst scheduledTime = webhookData.scheduled_time || '07:00';\nconst todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });\n\nconst cardsHtml = items.map((item, idx) => {\n  const sourceName = item.source === 'hackernews' ? 'Hacker News' : item.source === 'rss' ? 'Hugging Face' : 'arXiv Preprint';\n  const badgeColor = item.source === 'hackernews' ? '#ff6600' : item.source === 'rss' ? '#ff9d00' : '#4f46e5';\n  \n  return `\n    <div style=\"background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);\">\n      <div style=\"display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;\">\n        <span style=\"background: ` + badgeColor + `15; color: ` + badgeColor + `; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 9999px; text-transform: uppercase; font-family: monospace;\">` + sourceName + `</span>\n        <span style=\"font-size: 12px; font-weight: 700; color: #4338ca; font-family: monospace;\">Score: ` + (item.relevance_score || 8) + `/10</span>\n      </div>\n      <h3 style=\"font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 8px 0; line-height: 1.35;\">` + item.title + `</h3>\n      <p style=\"font-size: 13px; color: #4b5563; line-height: 1.5; margin: 0 0 12px 0;\">` + (item.ai_summary || '') + `</p>\n      ` + (item.why_it_matters ? `\n        <div style=\"background: #f8fafc; border-left: 3px solid #6366f1; padding: 8px 12px; margin-bottom: 14px; border-radius: 0 8px 8px 0;\">\n          <span style=\"font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase; display: block; margin-bottom: 2px;\">Why It Matters</span>\n          <span style=\"font-size: 12px; color: #334155;\">` + item.why_it_matters + `</span>\n        </div>\n      ` : '') + `\n      <div style=\"text-align: right;\">\n        <a href=\"` + (item.item_url || '#') + `\" style=\"display: inline-block; background: #4f46e5; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 9999px;\">Read Breakthrough \u2197</a>\n      </div>\n    </div>\n  `;\n}).join('');\n\nconst fullHtml = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"margin: 0; padding: 20px; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\">\n  <div style=\"max-width: 600px; margin: 0 auto;\">\n    <div style=\"background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 20px; padding: 24px; color: #ffffff; margin-bottom: 20px; text-align: center;\">\n      <div style=\"font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; margin-bottom: 4px; font-family: monospace;\">\u26a1 EchoAgent Daily Intelligence</div>\n      <h1 style=\"margin: 0 0 6px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;\">3 Morning Breakthroughs</h1>\n      <p style=\"margin: 0; font-size: 12px; opacity: 0.9; font-family: monospace;\">` + todayStr + ` \u2022 Scheduled for ` + scheduledTime + `</p>\n    </div>\n\n    ` + cardsHtml + `\n\n    <div style=\"text-align: center; padding: 16px; color: #9ca3af; font-size: 11px; font-family: monospace;\">\n      Delivered autonomously to ` + recipientEmail + ` \u2022 EchoAgent AI Autonomous Researcher\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    recipient_email: recipientEmail,\n    subject: `\u26a1 EchoAgent Morning Briefing: Top 3 AI Breakthroughs (` + todayStr + `)`,\n    html_body: fullHtml,\n    item_count: items.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        0
+      ],
+      "id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+      "name": "Build HTML Email Digest"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SENDER_EMAIL || \"echoagent.briefing@gmail.com\" }}",
+        "toEmail": "={{ $json.recipient_email }}",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2600,
+        0
+      ],
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Send Email Briefing",
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -424,6 +455,28 @@
       ]
     },
     "Save to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Email Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Email Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Email Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Briefing": {
       "main": [
         [
           {

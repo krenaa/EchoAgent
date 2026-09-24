@@ -13,7 +13,9 @@ export const initialMockPreferences = {
   },
   min_score: 7,
   is_active: true,
-  scheduled_time: '07:00:00',
+  delivery_email: 'researcher@gmail.com',
+  scheduled_time: '07:00',
+  email_briefing_enabled: true,
   last_executed_at: new Date().toISOString()
 };
 

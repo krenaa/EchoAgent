@@ -5,12 +5,10 @@ import {
   Plus, 
   Sliders, 
   CheckCircle, 
-  Sparkles,
-  Database,
-  Rss,
-  BookOpen,
-  Trash2,
-  ExternalLink,
+  Sparkles, 
+  Database, 
+  Rss, 
+  Trash2, 
   Layers
 } from 'lucide-react';
 
@@ -25,6 +23,7 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
   const [rssFeeds, setRssFeeds] = useState([]);
   const [newRssInput, setNewRssInput] = useState('');
   const [rssError, setRssError] = useState('');
+
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -51,7 +50,7 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
         ]);
       }
     }
-  }, [isOpen, preferences]);
+  }, [isOpen, preferences, user]);
 
   if (!isOpen) return null;
 
@@ -155,8 +154,8 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
               <Sliders className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-neutral-900 leading-tight font-display">Research Criteria & Sources</h2>
-              <p className="text-[11px] sm:text-xs text-neutral-500">Configure research topics, quality cutoff, and custom feeds</p>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 leading-tight font-display">Research Settings</h2>
+              <p className="text-[11px] sm:text-xs text-neutral-500">Configure research topics, custom sources, and scoring thresholds</p>
             </div>
           </div>
           <button
@@ -167,29 +166,29 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <div className="px-4 sm:px-6 py-2.5 bg-neutral-100/60 border-b border-neutral-200/60 flex items-center gap-2">
+        <div className="px-4 sm:px-6 py-2.5 bg-neutral-100/60 border-b border-neutral-200/60 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('topics')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'topics'
                 ? 'bg-indigo-600 text-white shadow-xs font-semibold'
                 : 'text-neutral-600 hover:text-neutral-900 bg-white hover:bg-neutral-50 border border-neutral-200/80'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Focus Topics & Score</span>
+            <span>Focus Topics</span>
           </button>
 
           <button
             onClick={() => setActiveTab('sources')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'sources'
                 ? 'bg-indigo-600 text-white shadow-xs font-semibold'
                 : 'text-neutral-600 hover:text-neutral-900 bg-white hover:bg-neutral-50 border border-neutral-200/80'
             }`}
           >
             <Rss className="w-3.5 h-3.5" />
-            <span>Custom Sources & Feeds</span>
+            <span>arXiv & RSS</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
               {rssFeeds.length}
             </span>
@@ -197,18 +196,18 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
-          {activeTab === 'topics' ? (
+          {activeTab === 'topics' && (
             <>
               <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-xs text-xs sm:text-sm font-mono flex-shrink-0">
-                    {(user?.email?.[0] || 'U').toUpperCase()}
+                    {(user?.email?.[0] || 'G').toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-xs sm:text-sm font-bold text-neutral-900 truncate">{user?.email || 'Curator Researcher'}</h3>
+                      <h3 className="text-xs sm:text-sm font-bold text-neutral-900 truncate">{user?.email || 'Gmail Researcher'}</h3>
                       <span className="text-[9px] sm:text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        Active
+                        Active User
                       </span>
                     </div>
                     <p className="text-[11px] sm:text-xs text-neutral-500 mt-0.5 flex items-center gap-1.5 truncate">
@@ -314,14 +313,16 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
             </>
-          ) : (
+          )}
+
+          {activeTab === 'sources' && (
             <>
               <div>
                 <label className="block text-[11px] font-semibold text-neutral-800 uppercase tracking-wider mb-1.5 font-mono">
                   arXiv Research Categories
                 </label>
                 <p className="text-[11px] sm:text-xs text-neutral-500 mb-3">
-                  Select which arXiv sub-disciplines the autonomous agent monitors during the daily crawl.
+                  Select which arXiv sub-disciplines the autonomous agent monitors during the crawl.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
@@ -448,7 +449,7 @@ export const PreferencesModal = ({ isOpen, onClose }) => {
               disabled={saving}
               className="px-4 sm:px-5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold rounded-full shadow-sm shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save Preferences'}
+              {saving ? 'Saving...' : 'Save Settings'}
             </button>
           </div>
         </div>
