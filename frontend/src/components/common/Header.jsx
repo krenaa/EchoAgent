@@ -19,24 +19,21 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running, demoScanLi
   return (
     <header className="border-b border-[#e8e8e3] bg-[#fbfbfa]/90 backdrop-blur-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden border border-neutral-200/90 shadow-sm flex-shrink-0 bg-white flex items-center justify-center p-0.5">
             <img src="/logo.png" alt="EchoAgent Logo" className="w-full h-full object-contain rounded-lg" />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-sm sm:text-base font-bold text-neutral-900 tracking-tight font-display">EchoAgent</span>
-              <span className="text-[9px] sm:text-[10px] uppercase font-mono font-bold tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                RADAR
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 text-[11px] sm:text-xs text-neutral-500">
-              <span className="flex items-center gap-1.5 text-neutral-700 font-medium whitespace-nowrap">
+          <div>
+            <span className="text-sm sm:text-base font-bold text-neutral-900 tracking-tight font-display block leading-none">
+              EchoAgent
+            </span>
+            <div className="hidden sm:flex items-center gap-1.5 mt-1 text-[11px] text-neutral-500">
+              <span className="flex items-center gap-1 text-neutral-700 font-medium whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Radar
               </span>
-              <span className="hidden sm:inline">•</span>
-              <span className="hidden sm:flex items-center gap-1 text-neutral-400 font-mono text-[11px] whitespace-nowrap">
+              <span>•</span>
+              <span className="flex items-center gap-1 text-neutral-400 font-mono whitespace-nowrap">
                 <Calendar className="w-3 h-3" />
                 {today}
               </span>

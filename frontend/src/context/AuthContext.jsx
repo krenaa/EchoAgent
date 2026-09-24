@@ -83,12 +83,10 @@ export const AuthProvider = ({ children }) => {
         const defaultPrefs = {
           user_id: userObj.id,
           email: userObj.email,
-          delivery_email: userObj.email,
           topics: ['Agentic AI', 'RAG', 'n8n', 'LangGraph', 'Production LLMs'],
           scheduled_time: '07:00:00',
           min_score: 7,
-          is_active: true,
-          email_briefing_enabled: true
+          is_active: true
         };
         const { data: newRow } = await supabase
           .from('user_preferences')
@@ -243,9 +241,19 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase && user && !user.is_demo) {
       try {
+        const payload = {
+          user_id: user.id,
+          email: user.email,
+          topics: newPrefs.topics,
+          custom_instructions: newPrefs.custom_instructions,
+          min_score: newPrefs.min_score,
+          is_active: newPrefs.is_active,
+          scheduled_time: newPrefs.scheduled_time,
+          telegram_chat_id: newPrefs.telegram_chat_id
+        };
         await supabase
           .from('user_preferences')
-          .upsert({ ...newPrefs, user_id: user.id });
+          .upsert(payload);
       } catch (err) {
         console.error('Error saving preferences to Supabase:', err);
       }

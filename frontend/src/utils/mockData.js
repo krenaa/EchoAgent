@@ -13,15 +13,13 @@ export const initialMockPreferences = {
   },
   min_score: 7,
   is_active: true,
-  delivery_email: 'researcher@gmail.com',
-  scheduled_time: '07:00',
-  email_briefing_enabled: true,
+  scheduled_time: '07:00:00',
   last_executed_at: new Date().toISOString()
 };
 
 export const mockDigestItems = [
   {
-    id: 'digest_item_01',
+    id: 'digest_item_arxiv_01',
     source: 'arxiv',
     title: 'Agent Workflow Memory: Hierarchical State Tracking in Multi-Agent Reasoning Loops',
     item_url: 'https://arxiv.org/abs/2405.18942',
@@ -35,7 +33,7 @@ export const mockDigestItems = [
     created_at: new Date().toISOString()
   },
   {
-    id: 'digest_item_02',
+    id: 'digest_item_hn_01',
     source: 'hackernews',
     title: 'Show HN: Low-Latency Structured Output Generation for Local LLMs with Zero Regex Overhead',
     item_url: 'https://news.ycombinator.com/item?id=40521890',
@@ -46,10 +44,10 @@ export const mockDigestItems = [
     raw_content_snippet: 'Existing solutions like instructor or guidance add latency or rely on heavy Python wrappers. This runs directly in the sampler loop with under 0.2ms overhead per token.',
     digest_date: new Date().toISOString().split('T')[0],
     delivered_to_telegram: true,
-    created_at: new Date(Date.now() - 3600000).toISOString()
+    created_at: new Date(Date.now() - 1800000).toISOString()
   },
   {
-    id: 'digest_item_03',
+    id: 'digest_item_rss_01',
     source: 'rss',
     title: 'Architecting Reliable Multi-Agent Systems in Production: 50 Enterprise Case Studies',
     item_url: 'https://blog.langchain.dev/architecting-reliable-multi-agent-systems/',
@@ -60,34 +58,132 @@ export const mockDigestItems = [
     raw_content_snippet: 'The biggest architectural shift in 2024 is moving away from black-box autonomous agents toward controlled state machines with explicit checkpointing and observability.',
     digest_date: new Date().toISOString().split('T')[0],
     delivered_to_telegram: true,
-    created_at: new Date(Date.now() - 7200000).toISOString()
+    created_at: new Date(Date.now() - 3600000).toISOString()
   },
   {
-    id: 'digest_item_04',
+    id: 'digest_item_arxiv_02',
     source: 'arxiv',
     title: 'Self-Correcting RAG: Automated Query Expansion and Grounding Verification',
     item_url: 'https://arxiv.org/abs/2405.09112',
     author_or_submitter: 'M. Gupta, S. Miller',
-    relevance_score: 7,
+    relevance_score: 8,
     ai_summary: 'Introduces an active retrieval agent that scores chunk sufficiency prior to generation and triggers secondary targeted vector searches if hallucination probability exceeds a threshold.',
     why_it_matters: 'Key mechanism for boosting answer accuracy in dense retrieval pipelines without ballooning embedding index storage.',
     raw_content_snippet: 'We find that static top-k retrieval yields poor synthesis when documents are disjointed. Our iterative probe guarantees factual grounding across heterogeneous corpora.',
     digest_date: new Date().toISOString().split('T')[0],
     delivered_to_telegram: true,
-    created_at: new Date(Date.now() - 10800000).toISOString()
+    created_at: new Date(Date.now() - 5400000).toISOString()
   },
   {
-    id: 'digest_item_05',
+    id: 'digest_item_hn_02',
     source: 'hackernews',
     title: 'Lessons from Running 1,000 n8n Workflows in Enterprise Production Infrastructure',
     item_url: 'https://news.ycombinator.com/item?id=40518201',
     author_or_submitter: 'cloud_architect',
-    relevance_score: 8,
-    ai_summary: 'Detailed operational post detailing worker container pooling, PostgreSQL connection scaling limits, webhook security, and error-handling loops under high loads.',
+    relevance_score: 9,
+    ai_summary: 'Detailed operational breakdown of worker container pooling, PostgreSQL connection scaling limits, webhook security, and error-handling loops under high loads.',
     why_it_matters: 'Provides battle-tested operational guidelines for deploying self-hosted n8n orchestrations on Render and VPS clusters reliably.',
     raw_content_snippet: 'Key takeaway: webhook payload sanitization and asynchronous queue workers are vital once your daily schedule exceeds 500 parallel triggers.',
     digest_date: new Date().toISOString().split('T')[0],
     delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 7200000).toISOString()
+  },
+  {
+    id: 'digest_item_rss_02',
+    source: 'rss',
+    title: 'Fine-Tuning Small Language Models with Direct Preference Optimization on Consumer GPUs',
+    item_url: 'https://huggingface.co/blog/dpo-consumer-gpus',
+    author_or_submitter: 'Philipp Schmid',
+    relevance_score: 8,
+    ai_summary: 'Practical guide to aligning 3B and 7B parameter local models using QLoRA and DPO in under 4 hours on a single 16GB GPU, beating generic base models on reasoning benchmarks.',
+    why_it_matters: 'Enables private, air-gapped domain models that run locally with minimal hardware investment.',
+    raw_content_snippet: 'By freezing base quantization weights and applying DPO rank-64 adapters, memory utilization drops by 60% with zero loss in target task precision.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 9000000).toISOString()
+  },
+  {
+    id: 'digest_item_arxiv_03',
+    source: 'arxiv',
+    title: 'Speculative Decoding via Dynamic Draft Verifiers for Edge LLMs',
+    item_url: 'https://arxiv.org/abs/2406.01284',
+    author_or_submitter: 'K. Tanaka, R. Alvarez, J. Doe',
+    relevance_score: 9,
+    ai_summary: 'Demonstrates a 2.4x inference acceleration on consumer hardware by pairing quantized small models with speculative verification trees, slashing latency for interactive voice agents.',
+    why_it_matters: 'Essential breakthrough for real-time edge agents and local voice interfaces where millisecond-level responsiveness is required.',
+    raw_content_snippet: 'Draft models generate 5-token candidate paths validated in a single forward pass of the target model, yielding speedups across varied generative benchmarks.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 10800000).toISOString()
+  },
+  {
+    id: 'digest_item_hn_03',
+    source: 'hackernews',
+    title: 'Show HN: LlamaCpp-Embed – Ultra-Fast C++ Local Embedding Daemon with ONNX Runtime',
+    item_url: 'https://news.ycombinator.com/item?id=40529810',
+    author_or_submitter: 'speed_hacker',
+    relevance_score: 8,
+    ai_summary: 'Lightweight embedding microservice with built-in batching, cosine similarity caching, and sub-5ms vector generation on Apple Silicon and modern x86 CPUs.',
+    why_it_matters: 'Removes the overhead of heavy Python embedding workers in local RAG architectures.',
+    raw_content_snippet: 'Replaces bulky LangChain and SentenceTransformers wrappers with a standalone C++ binary consuming less than 80MB RAM.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 12600000).toISOString()
+  },
+  {
+    id: 'digest_item_rss_03',
+    source: 'rss',
+    title: 'Building Autonomous Agents with Deterministic Safety Boundaries & State Checkpoints',
+    item_url: 'https://www.anthropic.com/research/agent-safety-boundaries',
+    author_or_submitter: 'Anthropic Systems Research',
+    relevance_score: 9,
+    ai_summary: 'Framework for preventing agent runaway loops and unauthorized side-effects using verified declarative policy guards and state snapshot rollbacks.',
+    why_it_matters: 'Critical architecture patterns for any autonomous agent granted write permissions to production APIs, databases, or messaging platforms.',
+    raw_content_snippet: 'Agents must operate under bounded state graphs where transition conditions are formally checked before executing external tool invocations.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
     created_at: new Date(Date.now() - 14400000).toISOString()
+  },
+  {
+    id: 'digest_item_arxiv_04',
+    source: 'arxiv',
+    title: 'Graph-RAG with Agentic Knowledge Extraction Across Heterogeneous Documents',
+    item_url: 'https://arxiv.org/abs/2406.05921',
+    author_or_submitter: 'E. Henderson, T. Vance, P. Kumar',
+    relevance_score: 8,
+    ai_summary: 'Combines knowledge graph triplet extraction with vector search to answer complex multi-hop research queries that standard vector chunking fails to connect.',
+    why_it_matters: 'Solves thematic reasoning and cross-paper synthesis for automated research review workflows.',
+    raw_content_snippet: 'Hierarchical community detection over extracted entity graphs provides 34% higher precision on broad conceptual research questions.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 16200000).toISOString()
+  },
+  {
+    id: 'digest_item_hn_04',
+    source: 'hackernews',
+    title: 'Ask HN: What is your production LLM evaluation and observability stack in 2026?',
+    item_url: 'https://news.ycombinator.com/item?id=40531200',
+    author_or_submitter: 'senior_lead',
+    relevance_score: 7,
+    ai_summary: 'In-depth thread discussing enterprise tradeoffs between self-hosted tracing frameworks, automated prompt evals, and semantic drift monitoring in high-volume apps.',
+    why_it_matters: 'Provides consensus on tooling choices and anti-patterns directly from practicing AI engineers.',
+    raw_content_snippet: 'Consensus emphasizes lightweight OpenTelemetry instrumentation over monolithic SaaS observability platforms for cost control.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 18000000).toISOString()
+  },
+  {
+    id: 'digest_item_rss_04',
+    source: 'rss',
+    title: 'Production RAG at Scale: Lessons Learned from Processing 10M Documents Daily',
+    item_url: 'https://cookbook.openai.com/examples/production_rag_scale',
+    author_or_submitter: 'OpenAI Applied AI Team',
+    relevance_score: 8,
+    ai_summary: 'Engineering patterns for parallel chunking pipelines, hybrid dense/sparse BM25 indexing, and dynamic context re-ranking with cross-encoders.',
+    why_it_matters: 'Provides real-world performance benchmarks and architecture blueprints for high-throughput enterprise document processing.',
+    raw_content_snippet: 'Hybrid search with cross-encoder re-ranking delivered a 28% jump in recall at the 99th percentile without increasing tail latency.',
+    digest_date: new Date().toISOString().split('T')[0],
+    delivered_to_telegram: true,
+    created_at: new Date(Date.now() - 19800000).toISOString()
   }
 ];

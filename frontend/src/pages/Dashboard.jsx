@@ -98,7 +98,9 @@ export const Dashboard = () => {
       if (sourceFilter !== 'all' && normalizeSource(item.source) !== sourceFilter) {
         return false;
       }
-      if (scoreFilter > 0 && (item.relevance_score || 0) < scoreFilter) {
+      const rawScore = item.relevance_score !== undefined ? item.relevance_score : item.score;
+      const numericScore = Number(rawScore) || 0;
+      if (scoreFilter > 0 && numericScore < Number(scoreFilter)) {
         return false;
       }
       if (selectedTopic !== 'All') {
@@ -169,7 +171,7 @@ export const Dashboard = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="hidden sm:flex items-center gap-2 self-start sm:self-auto">
             <div className="flex items-center p-1 bg-neutral-200/60 border border-neutral-300/80 rounded-full">
               <button
                 onClick={() => setGridColumns('two')}
@@ -197,11 +199,15 @@ export const Dashboard = () => {
           topics={displayTopics}
           selectedTopic={selectedTopic}
           onSelectTopic={setSelectedTopic}
+          setSelectedTopic={setSelectedTopic}
           sourceFilter={sourceFilter}
+          setSourceFilter={setSourceFilter}
           onSourceFilterChange={setSourceFilter}
           scoreFilter={scoreFilter}
+          setScoreFilter={setScoreFilter}
           onScoreFilterChange={setScoreFilter}
           searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           onSearchChange={setSearchQuery}
           counts={counts}
         />
