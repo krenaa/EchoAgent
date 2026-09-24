@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Zap, 
   Play, 
   Sliders, 
   LogOut, 
@@ -21,8 +20,8 @@ export const Header = ({ onOpenPreferences, onTriggerRunNow, running, demoScanLi
     <header className="border-b border-[#e8e8e3] bg-[#fbfbfa]/90 backdrop-blur-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-sm shadow-indigo-500/25 flex-shrink-0">
-            <Zap className="w-4 h-4 text-white fill-white" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden border border-neutral-200/90 shadow-sm flex-shrink-0 bg-white flex items-center justify-center p-0.5">
+            <img src="/logo.png" alt="EchoAgent Logo" className="w-full h-full object-contain rounded-lg" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2">

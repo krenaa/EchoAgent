@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Mail, Lock, ArrowRight, Sparkles, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Sparkles, AlertCircle, ShieldCheck } from 'lucide-react';
 import { GoogleButton } from '../components/auth/GoogleButton';
 import { GoogleAccountModal } from '../components/auth/GoogleAccountModal';
 
@@ -81,8 +81,8 @@ export const Login = () => {
     <div className="min-h-screen bg-[#fbfbfa] flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
       <div className="w-full max-w-md bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative z-10 border border-[#e8e8e3] shadow-lg">
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/25 mb-3">
-            <Zap className="w-6 h-6 text-white fill-white" />
+          <div className="w-14 h-14 rounded-2xl overflow-hidden border border-neutral-200/90 shadow-md mb-3 bg-white p-1 flex items-center justify-center">
+            <img src="/logo.png" alt="EchoAgent Logo" className="w-full h-full object-contain rounded-xl" />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight font-display">Welcome to EchoAgent</h1>
           <p className="text-[11px] sm:text-xs text-neutral-500 mt-1 font-mono">
