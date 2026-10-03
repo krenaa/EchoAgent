@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { DigestDetail } from './pages/DigestDetail';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { useBackendHeartbeat } from './utils/useBackendHeartbeat';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 export default function App() {
+  useBackendHeartbeat();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
