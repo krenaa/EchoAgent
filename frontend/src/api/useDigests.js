@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { mockDigestItems } from '../utils/mockData';
 
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '/webhook/trigger-digest';
+const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://echoagent.onrender.com/webhook/trigger-digest';
 
 const normalizeSource = (src) => {
   if (!src) return 'rss';

@@ -16,7 +16,7 @@ const getHeartbeatUrl = () => {
     }
   }
 
-  return '/healthz';
+  return 'https://echoagent.onrender.com/healthz';
 };
 
 export const useBackendHeartbeat = () => {
